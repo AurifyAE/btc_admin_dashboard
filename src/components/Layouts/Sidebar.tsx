@@ -37,6 +37,7 @@ import IconUsers from '../Icon/IconUsers';
 import IconInbox from '../Icon/IconInbox';
 import IconArrowWaveLeftUp from '../Icon/IconArrowWaveLeftUp';
 import IconArrowForward from '../Icon/IconArrowForward';
+import IconUser from '../Icon/IconUser';
 
 const Sidebar = () => {
     const [currentMenu, setCurrentMenu] = useState<string>('');
@@ -75,6 +76,7 @@ const Sidebar = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location]);
+    const userRole = localStorage.getItem('userRole'); // or useSelector(...) if from Redux
 
     return (
         <div className={semidark ? 'dark' : ''}>
@@ -83,8 +85,7 @@ const Sidebar = () => {
             >
                 <div className="bg-white dark:bg-black h-full">
                     <div className="flex justify-between items-center px-4 py-3">
-                        <NavLink to="/" className="main-logo flex items-center shrink-0">
-                        </NavLink>
+                        <NavLink to="/" className="main-logo flex items-center shrink-0"></NavLink>
 
                         <button
                             type="button"
@@ -96,8 +97,9 @@ const Sidebar = () => {
                     </div>
                     <PerfectScrollbar className="h-[calc(100vh-80px)] relative">
                         <ul className="relative font-semibold space-y-0.5 p-4 py-0">
-                           
-                            <li className="nav-item">
+                            {userRole === 'admin' && (
+                                <>
+                                    <li className="nav-item">
                                         <NavLink to="/" className="group">
                                             <div className="flex items-center">
                                                 <IconBox className="group-hover:!text-primary shrink-0" />
@@ -105,7 +107,7 @@ const Sidebar = () => {
                                             </div>
                                         </NavLink>
                                     </li>
-                            <li className="nav-item">
+                                    <li className="nav-item">
                                         <NavLink to="/admincart" className="group">
                                             <div className="flex items-center">
                                                 <IconInbox className="group-hover:!text-primary shrink-0" />
@@ -113,7 +115,7 @@ const Sidebar = () => {
                                             </div>
                                         </NavLink>
                                     </li>
-                            <li className="nav-item">
+                                    <li className="nav-item">
                                         <NavLink to="/locations" className="group">
                                             <div className="flex items-center">
                                                 <IconMapPin className="group-hover:!text-primary shrink-0" />
@@ -121,7 +123,7 @@ const Sidebar = () => {
                                             </div>
                                         </NavLink>
                                     </li>
-                            <li className="nav-item">
+                                    <li className="nav-item">
                                         <NavLink to="/salespersons" className="group">
                                             <div className="flex items-center">
                                                 <IconUsers className="group-hover:!text-primary shrink-0" />
@@ -129,7 +131,7 @@ const Sidebar = () => {
                                             </div>
                                         </NavLink>
                                     </li>
-                            <li className="nav-item">
+                                    <li className="nav-item">
                                         <NavLink to="/transaction" className="group">
                                             <div className="flex items-center">
                                                 <IconArrowForward className="group-hover:!text-primary shrink-0" />
@@ -137,6 +139,28 @@ const Sidebar = () => {
                                             </div>
                                         </NavLink>
                                     </li>
+                                </>
+                            )}
+                            {userRole === 'salesperson' && (
+                                <>
+                                <li className="nav-item">
+                                    <NavLink to="/incomingproducts" className="group">
+                                        <div className="flex items-center">
+                                            <IconInbox className="group-hover:!text-primary shrink-0" />
+                                            <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Incoming Products')}</span>
+                                        </div>
+                                    </NavLink>
+                                </li>
+                                <li className="nav-item">
+                                    <NavLink to="/spprofile" className="group">
+                                        <div className="flex items-center">
+                                            <IconUser className="group-hover:!text-primary shrink-0" />
+                                            <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Profile')}</span>
+                                        </div>
+                                    </NavLink>
+                                </li>
+                                </>
+                            )}
 
                             <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1">
                                 <IconMinus className="w-4 h-5 flex-none hidden" />

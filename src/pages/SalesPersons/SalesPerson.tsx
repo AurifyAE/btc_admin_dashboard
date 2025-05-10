@@ -35,7 +35,6 @@ const Contacts = () => {
         assignedLocation: '',
     });
     const [search, setSearch] = useState('');
-
     // Fetch data on component mount
     useEffect(() => {
         dispatch(setPageTitle('Contacts'));
@@ -78,14 +77,7 @@ const Contacts = () => {
     };
 
     // Fetch contacts
-    const fetchContacts = async () => {
-        try {
-            const response = await axios.get(`/salespersons`);
-            setContacts(response.data.salespersons);
-        } catch (error) {
-            console.error('Error fetching contacts:', error);
-        }
-    };
+
 
     // Edit modal
     const editModal = async (id: any) => {
@@ -240,6 +232,7 @@ const Contacts = () => {
                                 <th>Email</th>
                                 <th>Phone</th>
                                 <th>Location</th>
+                                <th>ID</th>
                                 <th className="!text-center">Actions</th>
                             </tr>
                         </thead>
@@ -266,6 +259,7 @@ const Contacts = () => {
                                     <td>{person?.phone}</td>
                                     {/* Access the specific property of assignedLocation */}
                                     <td>{person?.assignedLocation?.locationName || 'N/A'}</td>
+                                    <td>{person?.salespersonId}</td>
                                     <td>
                                         <div className="flex gap-4 items-center justify-center">
                                             <button type="button" className="btn btn-sm btn-outline-primary" onClick={()=> editModal(person._id)}>  

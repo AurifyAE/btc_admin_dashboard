@@ -105,6 +105,9 @@ const Locations = lazy(() => import('../pages/Locations/Location'));
 const SalesPersons = lazy(() => import('../pages/SalesPersons/SalesPerson'));
 const AdminCart = lazy(() => import('../pages/AdminCart/AdminCart'));
 const Transactions = lazy(() => import('../pages/Transaction/Transaction'));
+const Spprofile = lazy(() => import('../pages/SPProfile/Spprofile'));
+//for sales persons
+const IncomingProducts = lazy(() => import('../pages/IncominProductsForSales/IncomingProductsForSales'));
 
 const routes = [
     // dashboard
@@ -131,6 +134,15 @@ const routes = [
     {
         path: '/transaction',
         element: <Transactions />,
+    },
+    //for sales persons
+    {
+        path: '/incomingproducts',
+        element: <IncomingProducts />,
+    },
+    {
+        path: '/spprofile',
+        element: <Spprofile />,
     },
     // {
     //     path: '/index',

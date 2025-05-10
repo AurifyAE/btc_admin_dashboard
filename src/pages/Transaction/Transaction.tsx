@@ -5,6 +5,7 @@ import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import Select from 'react-select';
 import IconUser from '../../components/Icon/IconUser';
+import Swal from 'sweetalert2';
 type SalespersonOption = {
     label: string;
     value: string;
@@ -15,6 +16,7 @@ type SalespersonOption = {
     name: string;
     email: string;
     salespersonId: string;
+    _id: string;
 };
 
 const Infobox = () => {
@@ -35,7 +37,7 @@ const Infobox = () => {
     const PAGE_SIZES = [10, 20, 30, 50, 100];
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [allProducts, setAllProducts] = useState([]); // Store the original list of products
-    const [selectedProducts, setSelectedProducts] = useState([]); // Store selected products
+    const [selectedProducts, setSelectedProducts] = useState<any>([]); // Store selected products
     const [salespersons, setSalespersons] = useState([]);
     const [selectedSalesperson, setSelectedSalesperson] = useState<SalespersonOption | null>(null);
     const token = localStorage.getItem('authToken');
@@ -95,46 +97,68 @@ const Infobox = () => {
 
     const handleAssignProducts = () => {
         if (!selectedSalesperson || selectedProducts.length === 0) {
-            alert('Please select both products and a salesperson to assign');
+            showMessage('Please select both products and a salesperson to assign', 'warning');
             return;
         }
-
-        // Here you would implement the API call to assign products to the salesperson
+    
         console.log('Assigning products:', selectedProducts, 'to salesperson:', selectedSalesperson);
-
-        // Example of how you might structure the API call (uncomment and implement as needed)
-        /*
-        const assignProducts = async () => {
+    
+        const requestForAssignProduct = async () => {
             try {
                 await axios.post(
-                    `${backendUrl}/admin/assign-products-to-salesperson`,
+                    `${backendUrl}/admin/req-assign-products`,
                     {
-                        salespersonId: selectedSalesperson.value,
-                        productIds: selectedProducts.map(product => product.value)
+                        salespersonId: selectedSalesperson._id,
+                        productIds: selectedProducts.map((product: { _id: string }) => product._id),
                     },
                     {
                         headers: { Authorization: `Bearer ${token}` },
                     }
                 );
-                alert('Products assigned successfully!');
-                // Optionally reset selections or refresh data
+    
+                showMessage('Products assigned successfully!', 'success');
+    
+                // Clear all states
+                setSelectedProducts([]);
+                setSelectedSalesperson(null);
+    
+                // Re-fetch products and salespersons
+                fetchProducts();
+                fetchSalesPersons();
             } catch (error) {
                 console.error('Error assigning products:', error);
-                alert('Failed to assign products');
+                showMessage('Failed to assign products', 'error');
             }
         };
-        
-        assignProducts();
-        */
+    
+        requestForAssignProduct();
     };
 
+      const showMessage = (msg: string = '', type: 'success' | 'error' | 'warning' | 'info' | 'question' = 'success') => {
+            Swal.fire({
+                icon: type,
+                title: msg,
+                toast: true,
+                position: 'top',
+                showConfirmButton: false,
+                timer: 3000,
+            });
+        };
     return (
         <div>
             <div className="pt-5 grid lg:grid-cols-2 grid-cols-1 gap-6">
                 {/* Infobox-1 */}
                 <div className="panel" id="infobox_1">
                     <h1 className="text-2xl font-bold mb-4">Choose Products</h1>
-                    <Select closeMenuOnSelect={false} isMulti options={allProducts} value={selectedProducts} onChange={handleProductChange} placeholder="Select or search products..." className="mb-6" />
+                    <Select
+                        closeMenuOnSelect={false}
+                        isMulti
+                        options={allProducts}
+                        value={selectedProducts}
+                        onChange={handleProductChange}
+                        placeholder="Select or search products..."
+                        className="mb-6"
+                    />
                 </div>
 
                 {/* Infobox-2 */}
