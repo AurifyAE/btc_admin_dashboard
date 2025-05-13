@@ -5,6 +5,7 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const ProductInHand = () => {
     const dispatch = useDispatch();
@@ -123,10 +124,23 @@ const ProductInHand = () => {
             
             // Refresh data after updating products
             fetchProductsForUser(userData.id);
+            showMessage('Products returned successfully!', 'success');
         } catch (error) {
             console.error('Error returning products:', error);
+            showMessage('Failed to return products', 'error');
         }
     };
+
+     const showMessage = (msg: string = '', type: 'success' | 'error' | 'warning' | 'info' | 'question' = 'success') => {
+                Swal.fire({
+                    icon: type,
+                    title: msg,
+                    toast: true,
+                    position: 'top',
+                    showConfirmButton: false,
+                    timer: 3000,
+                });
+            };
 
     return (
         <div>

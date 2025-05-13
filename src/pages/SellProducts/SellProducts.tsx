@@ -571,10 +571,7 @@ const Add = () => {
                         </div>
                     </div>
                 </div>
-                <div className="mt-8 px-4">
-                    <label htmlFor="notes">Notes</label>
-                    <textarea id="notes" name="notes" className="form-textarea min-h-[130px]" placeholder="Notes...."></textarea>
-                </div>
+                
                 <div className="mt-8 px-4 flex justify-end">
                     <button type="button" className="btn btn-primary">
                         Create Invoice

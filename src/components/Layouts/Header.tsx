@@ -137,12 +137,7 @@ const Header = () => {
     const [flag, setFlag] = useState(themeConfig.locale);
 
     const { t } = useTranslation();
-    const handleLogout = () => {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userData');
-        window.location.href = '/auth/cover-login';
-    };
+ 
 
     return (
         <header className={`z-40 ${themeConfig.semidark && themeConfig.menu === 'horizontal' ? 'dark' : ''}`}>
@@ -167,12 +162,7 @@ const Header = () => {
                             </button>
                         </div>
 
-                        <div className="dropdown shrink-0 ml-auto">
-                            <button type="button" className="btn btn-danger" onClick={handleLogout}>
-                                <IconLogout className="mr-4" />
-                                Logout
-                            </button>
-                        </div>
+                       
                     </div>
                 </div>
 

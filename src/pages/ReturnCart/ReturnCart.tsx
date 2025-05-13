@@ -23,7 +23,6 @@ const ProductInHand = () => {
         columnAccessor: 'id',
         direction: 'asc',
     });
-    const [selectedRecords, setSelectedRecords] = useState<any[]>([]); // Added state for selected records
 
     const fetchProductsForUser = async (userId: string) => {
         if (!userId) {
@@ -40,7 +39,6 @@ const ProductInHand = () => {
             const salespersonData = response.data.salesperson;
             const products = salespersonData.returnAppliedProducts || [];
 
-    
             console.log('Products:', products);
             // Normalize _id to id for the datatable
             const normalizedProducts = products.map((item: any) => ({
@@ -57,7 +55,7 @@ const ProductInHand = () => {
     };
 
     useEffect(() => {
-        dispatch(setPageTitle('Products in Hand'));
+        dispatch(setPageTitle('Return Cart'));
 
         if (!token || userRole !== 'salesperson') {
             navigate('/auth/cover-login');
@@ -91,50 +89,14 @@ const ProductInHand = () => {
         setRecordsData(finalProducts.slice(from, to));
     }, [page, pageSize, productsInHand, tableSortStatus]);
 
-
-    // Another example function for different action
-    const handleReturnProducts = async () => {
-        try {
-            if (!selectedRecords || selectedRecords.length === 0) {
-                console.error('No records selected.');
-                return;
-            }
-            
-            console.log('Selected Records:', selectedRecords);
-            
-            const productIds = selectedRecords
-                .map((item) => item?.productId?._id)
-                .filter((id) => id);
-            
-            if (productIds.length === 0) {
-                console.error('No valid product IDs found in selected records.');
-                return;
-            }
-            console.log('Product IDs to return:', productIds);
-            // Example endpoint - you'll need to create this on your backend
-            await axios.put(
-                `${backendUrl}/salesperson/return-products/${userData.id}`,
-                { productIds },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-            
-            // Refresh data after updating products
-            fetchProductsForUser(userData.id);
-        } catch (error) {
-            console.error('Error returning products:', error);
-        }
-    };
+   
 
     return (
         <div>
             <div className="panel mt-6">
                 <div className="flex md:items-center md:flex-row flex-col mb-5 gap-5">
                     <h5 className="font-semibold text-lg dark:text-white-light">Return Cart</h5>
-                    <div className="ltr:ml-auto rtl:mr-auto" style={{display: 'flex', gap: '10px'}}>
+                    <div className="ltr:ml-auto rtl:mr-auto" style={{ display: 'flex', gap: '10px' }}>
                         {/* <button disabled={selectedRecords.length === 0} type="button" className="btn btn-primary" onClick={handleMarkAsSold}>
                             Mark as Sold
                         </button> */}
@@ -144,25 +106,25 @@ const ProductInHand = () => {
                     </div>
                 </div>
                 <div className="datatables">
-                <DataTable
-    className="whitespace-nowrap table-hover"
-    records={recordsData}
-    columns={[
-        { accessor: 'productId.sku', title: 'SKU' },
-        { accessor: 'productId.name', title: 'Product Name' },
-        { accessor: 'productId.category', title: 'Category' },
-        { accessor: 'productId.price', title: 'Price' },
-    ]}
-    highlightOnHover
-    withBorder
-    withColumnBorders
-    idAccessor="id"
-    minHeight={200}
-    sortStatus={tableSortStatus}
-    onSortStatusChange={setTableSortStatus}
-    // Removed selectedRecords and related props
-    // Removed pagination-related props
-/>
+                    <DataTable
+                        className="whitespace-nowrap table-hover"
+                        records={recordsData}
+                        columns={[
+                            { accessor: 'productId.sku', title: 'SKU' },
+                            { accessor: 'productId.name', title: 'Product Name' },
+                            { accessor: 'productId.category', title: 'Category' },
+                            { accessor: 'productId.price', title: 'Price' },
+                        ]}
+                        highlightOnHover
+                        withBorder
+                        withColumnBorders
+                        idAccessor="id"
+                        minHeight={200}
+                        sortStatus={tableSortStatus}
+                        onSortStatusChange={setTableSortStatus}
+                        // Removed selectedRecords and related props
+                        // Removed pagination-related props
+                    />
                 </div>
             </div>
         </div>

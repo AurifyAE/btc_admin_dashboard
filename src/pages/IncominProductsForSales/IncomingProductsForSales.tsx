@@ -5,6 +5,7 @@ import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const Custom = () => {
     const dispatch = useDispatch();
@@ -116,8 +117,10 @@ const Custom = () => {
     
             // Optionally, you can refresh the data after accepting products
             fetchUserById(data.id);
+            showMessage('Products accepted successfully!', 'success');
         } catch (error) {
             console.error('Error accepting products:', error);
+            showMessage('Failed to accept products', 'error');
         }
     };
     
@@ -151,12 +154,23 @@ const Custom = () => {
     
             // Optionally, you can refresh the data after rejecting products
             fetchUserById(data.id);
+            showMessage('Products rejected successfully!', 'success');
         } catch (error) {
             console.error('Error rejecting products:', error);
+            showMessage('Failed to reject products', 'error');
         }
     };
 
-
+ const showMessage = (msg: string = '', type: 'success' | 'error' | 'warning' | 'info' | 'question' = 'success') => {
+            Swal.fire({
+                icon: type,
+                title: msg,
+                toast: true,
+                position: 'top',
+                showConfirmButton: false,
+                timer: 3000,
+            });
+        };
     return (
         <div>
             <div className="panel mt-6">

@@ -43,6 +43,8 @@ import IconArrowLeft from '../Icon/IconArrowLeft';
 import IconArrowBackward from '../Icon/IconArrowBackward';
 import IconClipboardText from '../Icon/IconClipboardText';
 import IconFolder from '../Icon/IconFolder';
+import IconLogout from '../Icon/IconLogout';
+import Swal from 'sweetalert2';
 
 const Sidebar = () => {
     const [currentMenu, setCurrentMenu] = useState<string>('');
@@ -83,6 +85,52 @@ const Sidebar = () => {
     }, [location]);
     const userRole = localStorage.getItem('userRole'); // or useSelector(...) if from Redux
 
+
+    const handleLogout = () => {
+        Swal.fire({
+            icon: 'question',
+            title: 'Logout Confirmation',
+            text: 'Are you sure you want to logout?',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, logout',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                confirmButton: 'btn btn-primary',
+                cancelButton: 'btn btn-outline-danger ms-3'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Proceed with logout
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userRole');
+                localStorage.removeItem('userData');
+                
+                // Show success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Logged Out Successfully',
+                    toast: true,
+                    position: 'top',
+                    showConfirmButton: false,
+                    timer: 3000,
+                });
+                
+                // Redirect
+                window.location.href = '/auth/cover-login';
+            }
+        });
+    };
+     const showMessage = (msg: string = '', type: 'success' | 'error' | 'warning' | 'info' | 'question' = 'success') => {
+            Swal.fire({
+                icon: type,
+                title: msg,
+                toast: true,
+                position: 'top',
+                showConfirmButton: false,
+                timer: 3000,
+            });
+        };
     return (
         <div className={semidark ? 'dark' : ''}>
             <nav
@@ -202,6 +250,14 @@ const Sidebar = () => {
                                 </>
                             )}
 
+                            <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1">
+                            <div className="dropdown shrink-0 w-full">
+                            <button type="button" className="btn btn-danger w-full" onClick={handleLogout}>
+                                <IconLogout className="mr-4" />
+                                Logout
+                            </button>
+                        </div>
+                            </h2>
                             <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1">
                                 <IconMinus className="w-4 h-5 flex-none hidden" />
                                 <span>{t('apps')}</span>
