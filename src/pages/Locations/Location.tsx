@@ -30,7 +30,7 @@ const Contacts = () => {
     }, [navigate]);
     
     useEffect(() => {
-        dispatch(setPageTitle('Contacts'));
+        dispatch(setPageTitle('Locations'));
         fetchLocations();
     }, [dispatch]);
 

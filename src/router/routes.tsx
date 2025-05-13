@@ -106,8 +106,12 @@ const SalesPersons = lazy(() => import('../pages/SalesPersons/SalesPerson'));
 const AdminCart = lazy(() => import('../pages/AdminCart/AdminCart'));
 const Transactions = lazy(() => import('../pages/Transaction/Transaction'));
 const Spprofile = lazy(() => import('../pages/SPProfile/Spprofile'));
+const ReturnCartOfAdmin = lazy(() => import('../pages/ReturnCartOfAdmin/ReturnCartOfAdmin'));
 //for sales persons
 const IncomingProducts = lazy(() => import('../pages/IncominProductsForSales/IncomingProductsForSales'));
+const ProductInHand = lazy(() => import('../pages/ProductInHand/ProductInHand'));
+const SellProduct = lazy(() => import('../pages/SellProducts/SellProducts'));
+const ReturnCart = lazy(() => import('../pages/ReturnCart/ReturnCart'));
 
 const routes = [
     // dashboard
@@ -135,14 +139,30 @@ const routes = [
         path: '/transaction',
         element: <Transactions />,
     },
+    {
+        path: '/returncartofadmin',
+        element: <ReturnCartOfAdmin />,
+    },
     //for sales persons
     {
         path: '/incomingproducts',
         element: <IncomingProducts />,
     },
     {
+        path: '/productinhand',
+        element: <ProductInHand />,
+    },
+    {
         path: '/spprofile',
         element: <Spprofile />,
+    },
+    {
+        path: '/sellproduct',
+        element: <SellProduct />
+    },
+    {
+        path: '/returncart',
+        element: <ReturnCart />
     },
     // {
     //     path: '/index',

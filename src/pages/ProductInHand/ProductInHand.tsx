@@ -6,25 +6,26 @@ import { setPageTitle } from '../../store/themeConfigSlice';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const Custom = () => {
+const ProductInHand = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const token = localStorage.getItem('authToken');
     const userRole = localStorage.getItem('userRole');
     const backendUrl = import.meta.env.VITE_API_URL;
-    const [data, setData] = useState<any>(null);
-    const [pendingProducts, setPendingProducts] = useState<any[]>([]);
+
+    const [userData, setUserData] = useState<any>(null);
+    const [productsInHand, setProductsInHand] = useState<any[]>([]);
     const [page, setPage] = useState(1);
     const PAGE_SIZES = [10, 20, 30, 50, 100];
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [recordsData, setRecordsData] = useState<any[]>([]);
-    const [sortStatus, setSortStatus] = useState<DataTableSortStatus>({
+    const [tableSortStatus, setTableSortStatus] = useState<DataTableSortStatus>({
         columnAccessor: 'id',
         direction: 'asc',
     });
-    const [selectedRecords, setSelectedRecords] = useState<any[]>([]); // State to store selected items
+    const [selectedRecords, setSelectedRecords] = useState<any[]>([]); // Added state for selected records
 
-    const fetchUserById = async (userId: string) => {
+    const fetchProductsForUser = async (userId: string) => {
         if (!userId) {
             console.error('User ID is undefined or empty');
             return;
@@ -37,22 +38,24 @@ const Custom = () => {
                 },
             });
             const salespersonData = response.data.salesperson;
-            const products = salespersonData.pendingProducts || [];
+            const products = salespersonData.assignedProducts || [];
 
+            console.log('Products:', products);
             // Normalize _id to id for the datatable
-            const normalized = products.map((item: any) => ({
+            const normalizedProducts = products.map((item: any) => ({
                 ...item,
                 id: item._id || item.id,
             }));
+            console.log('Normalized Products:', normalizedProducts);
 
-            setPendingProducts(normalized);
+            setProductsInHand(normalizedProducts);
         } catch (error) {
             console.error('Error fetching user data:', error);
         }
     };
 
     useEffect(() => {
-        dispatch(setPageTitle('Profile'));
+        dispatch(setPageTitle('Products in Hand'));
 
         if (!token || userRole !== 'salesperson') {
             navigate('/auth/cover-login');
@@ -60,10 +63,10 @@ const Custom = () => {
         }
 
         try {
-            const userData = localStorage.getItem('userData');
-            if (userData) {
-                const parsedData = JSON.parse(userData);
-                setData(parsedData);
+            const storedUserData = localStorage.getItem('userData');
+            if (storedUserData) {
+                const parsedData = JSON.parse(storedUserData);
+                setUserData(parsedData);
             } else {
                 console.error('No user data found in localStorage');
             }
@@ -73,39 +76,43 @@ const Custom = () => {
     }, [navigate]);
 
     useEffect(() => {
-        if (data && data.id) {
-            fetchUserById(data.id);
+        if (userData && userData.id) {
+            fetchProductsForUser(userData.id);
         }
-    }, [data]);
+    }, [userData]);
 
     useEffect(() => {
         const from = (page - 1) * pageSize;
         const to = from + pageSize;
-        const sortedData = sortBy(pendingProducts, sortStatus.columnAccessor);
-        const paginatedData = sortStatus.direction === 'desc' ? sortedData.reverse() : sortedData;
-        setRecordsData(paginatedData.slice(from, to));
-    }, [page, pageSize, pendingProducts, sortStatus]);
+        const sortedProducts = sortBy(productsInHand, tableSortStatus.columnAccessor);
+        const finalProducts = tableSortStatus.direction === 'desc' ? sortedProducts.reverse() : sortedProducts;
+        setRecordsData(finalProducts.slice(from, to));
+    }, [page, pageSize, productsInHand, tableSortStatus]);
 
-    const handleAccept = async () => {
+  
+
+    // Another example function for different action
+    const handleReturnProducts = async () => {
         try {
             if (!selectedRecords || selectedRecords.length === 0) {
                 console.error('No records selected.');
                 return;
             }
-    
+            
             console.log('Selected Records:', selectedRecords);
-    
+            
             const productIds = selectedRecords
-                .map((item) => item?.productId?._id) // Adjusted mapping logic
-                .filter((id) => id); // Filter out undefined or null IDs
-    
+                .map((item) => item?.productId?._id)
+                .filter((id) => id);
+            
             if (productIds.length === 0) {
                 console.error('No valid product IDs found in selected records.');
                 return;
             }
-    
+            console.log('Product IDs to return:', productIds);
+            // Example endpoint - you'll need to create this on your backend
             await axios.put(
-                `${backendUrl}/salesperson/accept-products/${data.id}`,
+                `${backendUrl}/salesperson/return-products/${userData.id}`,
                 { productIds },
                 {
                     headers: {
@@ -113,61 +120,26 @@ const Custom = () => {
                     },
                 }
             );
-    
-            // Optionally, you can refresh the data after accepting products
-            fetchUserById(data.id);
+            
+            // Refresh data after updating products
+            fetchProductsForUser(userData.id);
         } catch (error) {
-            console.error('Error accepting products:', error);
+            console.error('Error returning products:', error);
         }
     };
-    
-    const handleReject = async () => {
-        try {
-            if (!selectedRecords || selectedRecords.length === 0) {
-                console.error('No records selected.');
-                return;
-            }
-    
-            console.log('Selected Records:', selectedRecords);
-    
-            const productIds = selectedRecords
-                .map((item) => item?.productId?._id) // Adjusted mapping logic
-                .filter((id) => id); // Filter out undefined or null IDs
-    
-            if (productIds.length === 0) {
-                console.error('No valid product IDs found in selected records.');
-                return;
-            }
-    
-            await axios.put(
-                `${backendUrl}/salesperson/reject-products/${data.id}`, // Adjusted endpoint for rejection
-                { productIds },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
-            );
-    
-            // Optionally, you can refresh the data after rejecting products
-            fetchUserById(data.id);
-        } catch (error) {
-            console.error('Error rejecting products:', error);
-        }
-    };
-
 
     return (
         <div>
             <div className="panel mt-6">
                 <div className="flex md:items-center md:flex-row flex-col mb-5 gap-5">
-                    <h5 className="font-semibold text-lg dark:text-white-light">Incoming Products</h5>
+                    <h5 className="font-semibold text-lg dark:text-white-light">Products in Hand</h5>
                     <div className="ltr:ml-auto rtl:mr-auto" style={{display: 'flex', gap: '10px'}}>
-                        <button disabled={selectedRecords.length === 0} type="button" className="btn btn-primary" onClick={handleAccept}>
-                            Accept
+                        {/* <button disabled={selectedRecords.length === 0} type="button" className="btn btn-primary" onClick={handleMarkAsSold}>
+                            Mark as Sold
+                        </button> */}
+                        <button disabled={selectedRecords.length === 0} type="button" className="btn btn-outline-danger" onClick={handleReturnProducts}>
+                            Return Products
                         </button>
-                        <button disabled={selectedRecords.length === 0} type="button" className="btn btn-outline-danger" onClick={handleReject}>Reject</button>
-
                     </div>
                 </div>
                 <div className="datatables">
@@ -187,6 +159,14 @@ const Custom = () => {
                         onSelectedRecordsChange={setSelectedRecords}
                         idAccessor="id"
                         minHeight={200}
+                        sortStatus={tableSortStatus}
+                        onSortStatusChange={setTableSortStatus}
+                        page={page}
+                        onPageChange={setPage}
+                        recordsPerPage={pageSize}
+                        onRecordsPerPageChange={setPageSize}
+                        totalRecords={productsInHand.length}
+                        recordsPerPageOptions={PAGE_SIZES}
                     />
                 </div>
             </div>
@@ -194,4 +174,4 @@ const Custom = () => {
     );
 };
 
-export default Custom;
+export default ProductInHand;

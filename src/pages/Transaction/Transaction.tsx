@@ -24,7 +24,7 @@ const Infobox = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        dispatch(setPageTitle('Checkbox Table'));
+        dispatch(setPageTitle('Transaction'));
     }, []); // Added dependency array to prevent infinite re-renders
 
     useEffect(() => {

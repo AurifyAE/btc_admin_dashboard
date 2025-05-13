@@ -38,6 +38,11 @@ import IconInbox from '../Icon/IconInbox';
 import IconArrowWaveLeftUp from '../Icon/IconArrowWaveLeftUp';
 import IconArrowForward from '../Icon/IconArrowForward';
 import IconUser from '../Icon/IconUser';
+import IconShoppingCart from '../Icon/IconShoppingCart';
+import IconArrowLeft from '../Icon/IconArrowLeft';
+import IconArrowBackward from '../Icon/IconArrowBackward';
+import IconClipboardText from '../Icon/IconClipboardText';
+import IconFolder from '../Icon/IconFolder';
 
 const Sidebar = () => {
     const [currentMenu, setCurrentMenu] = useState<string>('');
@@ -85,7 +90,10 @@ const Sidebar = () => {
             >
                 <div className="bg-white dark:bg-black h-full">
                     <div className="flex justify-between items-center px-4 py-3">
-                        <NavLink to="/" className="main-logo flex items-center shrink-0"></NavLink>
+                        <NavLink to="/" className="main-logo flex items-center shrink-0">
+                        <h1 style={{fontSize:'40px'}}>BTC</h1>  
+
+                        </NavLink>
 
                         <button
                             type="button"
@@ -112,6 +120,14 @@ const Sidebar = () => {
                                             <div className="flex items-center">
                                                 <IconInbox className="group-hover:!text-primary shrink-0" />
                                                 <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Admin Cart')}</span>
+                                            </div>
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink to="/returncartofadmin" className="group">
+                                            <div className="flex items-center">
+                                                <IconFolder className="group-hover:!text-primary shrink-0" />
+                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Return Cart')}</span>
                                             </div>
                                         </NavLink>
                                     </li>
@@ -152,10 +168,34 @@ const Sidebar = () => {
                                     </NavLink>
                                 </li>
                                 <li className="nav-item">
+                                    <NavLink to="/productinhand" className="group">
+                                        <div className="flex items-center">
+                                            <IconShoppingCart className="group-hover:!text-primary shrink-0" />
+                                            <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Products In Hand')}</span>
+                                        </div>
+                                    </NavLink>
+                                </li>
+                                <li className="nav-item">
                                     <NavLink to="/spprofile" className="group">
                                         <div className="flex items-center">
                                             <IconUser className="group-hover:!text-primary shrink-0" />
                                             <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Profile')}</span>
+                                        </div>
+                                    </NavLink>
+                                </li>
+                                <li className="nav-item">
+                                    <NavLink to="/returncart" className="group">
+                                        <div className="flex items-center">
+                                            <IconArrowBackward className="group-hover:!text-primary shrink-0" />
+                                            <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Return Cart')}</span>
+                                        </div>
+                                    </NavLink>
+                                </li>
+                                <li className="nav-item">
+                                    <NavLink to="/sellproduct" className="group">
+                                        <div className="flex items-center">
+                                            <IconArrowLeft className="group-hover:!text-primary shrink-0" />
+                                            <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Sell')}</span>
                                         </div>
                                     </NavLink>
                                 </li>

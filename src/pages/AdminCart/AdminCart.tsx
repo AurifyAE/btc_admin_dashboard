@@ -26,7 +26,7 @@ const Products = () => {
     }, [navigate]);
 
     useEffect(() => {
-        dispatch(setPageTitle('Products'));
+        dispatch(setPageTitle('Admin Cart'));
     }, [dispatch]);
 
     // Fetch products from the backend

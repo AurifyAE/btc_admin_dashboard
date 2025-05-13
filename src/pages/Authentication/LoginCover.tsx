@@ -95,7 +95,7 @@ const UnifiedLoginCover = () => {
                 localStorage.setItem('authToken', token);
                 localStorage.setItem('userRole', 'salesperson');
                 localStorage.setItem('userData', JSON.stringify(salesperson));
-                navigate('/');
+                navigate('/spprofile');
             }
         } catch (err) {
             if (axios.isAxiosError(err)) {

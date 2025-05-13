@@ -37,7 +37,7 @@ const Contacts = () => {
     const [search, setSearch] = useState('');
     // Fetch data on component mount
     useEffect(() => {
-        dispatch(setPageTitle('Contacts'));
+        dispatch(setPageTitle('Sales Persons'));
         // fetchContacts();
         fetchSalesPersons();
         fetchLocations();
