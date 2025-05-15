@@ -42,37 +42,18 @@ const Products = () => {
     
                 // Transform the data to include all details from the server
                 const transformedProducts = response.data.products.map((product: any) => ({
-                   
-                    name: product.name,
-                    sku: product.sku,
-                    weight: product.weight, // Convert oz to grams
-                    karat: product.karat,
-                    purity: product.purity,
-                    gold_rate: product.gold_rate,
-                    final_price: product.final_price,
-                    created_at: new Date(product.createdAt).toLocaleDateString('en-GB').replace(/\//g, '/ '),
-                    description: product.description || null,
-                    category: product.category || null,
-                    sub_category: product.sub_category || null,
-                    design_code: product.design_code || null,
-                    discount: product.discount || null,
-                    gender: product.gender || null,
-                    gold_type: product.gold_type || null,
-                    hallmark: product.hallmark,
-                    has_stones: product.has_stones,
-                    stone_type: product.stone_type || null,
-                    stone_weight: product.stone_weight || null,
-                    style: product.style || null,
-                    size: product.size || null,
-                    length: product.length || null,
-                    width: product.width || null,
-                    height: product.height || null,
-                    stone_count: product.stone_count || null,
-                    making_charges: product.making_charges || null,
-                    making_charges_type: product.making_charges_type || null,
-                    price: product.price || null,
-                    updated_at: product.updated_at || null,
+                    stock_code: product.stock_code,
+                    description: product.description,
+                    gross_weight: parseFloat(product.gross_weight),
+                    stone_weight: parseFloat(product.stone_weight),
+                    net_weight: parseFloat(product.net_weight),
+                    pure_weight: parseFloat(product.pure_weight),
+                    mkg_rate: parseFloat(product.mkg_rate),
+                    mkg_amount: parseFloat(product.mkg_amount),
+                    net_amount: parseFloat(product.net_amount),
+                    barcode: product.barcode
                 }));
+                
     
                 setProducts(transformedProducts);
     console.log('Fetched products:', transformedProducts); // Log the fetched products
@@ -119,29 +100,18 @@ const Products = () => {
     className="whitespace-nowrap table-hover"
     records={recordsData}
     columns={[
-        { accessor: 'name', title: 'Name' },
-        { accessor: 'sku', title: 'SKU' },
-        { accessor: 'weight', title: 'Weight (g)' },
-        { accessor: 'karat', title: 'Karat' },
-        { accessor: 'purity', title: 'Purity (%)' },
-        { accessor: 'price', title: 'Price' },
-        { accessor: 'final_price', title: 'Total Price' },
-        { accessor: 'created_at', title: 'Added Date' },
-        { accessor: 'description', title: 'Remarks' },
-        { accessor: 'category', title: 'Category' },
-        { accessor: 'sub_category', title: 'Sub-Category' },
-        { accessor: 'design_code', title: 'Design Code' },
-        { accessor: 'discount', title: 'Discount (%)' },
-        { accessor: 'gender', title: 'Gender' },
-        { accessor: 'gold_type', title: 'Gold Type' },
-        { accessor: 'hallmark', title: 'Hallmark' },
-        { accessor: 'has_stones', title: 'Has Stones' },
-        { accessor: 'stone_type', title: 'Stone Type' },
-        { accessor: 'stone_weight', title: 'Stone Weight' },
-        { accessor: 'style', title: 'Style' },
-        { accessor: 'size', title: 'Size' },
-        { accessor: 'dimensions', title: 'Dimensions (L x W x H)' },
-    ]}
+        { accessor: 'stock_code', title: 'Stock Code' },
+        { accessor: 'description', title: 'Description' },
+        { accessor: 'gross_weight', title: 'Gross Weight (g)' },
+        { accessor: 'stone_weight', title: 'Stone Weight (g)' },
+        { accessor: 'net_weight', title: 'Net Weight (g)' },
+        { accessor: 'pure_weight', title: 'Pure Weight (g)' },
+        { accessor: 'mkg_rate', title: 'Making Rate (%)' },
+        { accessor: 'mkg_amount', title: 'Making Charges (₹)' },
+        { accessor: 'net_amount', title: 'Net Amount (₹)' },
+        { accessor: 'barcode', title: 'Barcode' }
+      ]
+      }
     totalRecords={products.length}
     recordsPerPage={pageSize}
     page={page}

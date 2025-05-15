@@ -42,30 +42,17 @@ const Products = () => {
     
                 // Transform the data to include all details from the server
                 const transformedProducts = response.data.products.map((product:any) => ({
-                    id: product.product_id,
-                    name: product.name,
-                    sku: product.sku,
-                    weightInGrams: product.weight, // Convert oz to grams
-                    karat: product.karat,
-                    purity: parseFloat(product.purity),
-                    pricePerGram: parseFloat(product.price),
-                    totalPrice: parseFloat(product.final_price),
-                    
-                    addedDate: new Date(product.createdAt).toLocaleDateString('en-GB').replace(/\//g, '/ '),
-                    remarks: product.description || "N/A",
-                    category: product.category || "N/A",
-                    subCategory: product.sub_category || "N/A",
-                    designCode: product.design_code || "N/A",
-                    discount: product.discount || "0",
-                    gender: product.gender || "Unisex",
-                    goldType: product.gold_type || "N/A",
-                    hallmark: product.hallmark ? "Yes" : "No",
-                    hasStones: product.has_stones ? "Yes" : "No",
-                    stoneType: product.stone_type || "N/A",
-                    stoneWeight: product.stone_weight || "N/A",
-                    style: product.style || "N/A",
-                    size: product.size || "N/A",
-                    dimensions: `${product.length || "N/A"} x ${product.width || "N/A"} x ${product.height || "N/A"}`,
+                    id: product._id || null, // or product.id if applicable
+    stockCode: product.stock_code,
+    description: product.description || "N/A",
+    grossWeight: parseFloat(product.gross_weight),
+    stoneWeight: parseFloat(product.stone_weight),
+    netWeight: parseFloat(product.net_weight),
+    pureWeight: parseFloat(product.pure_weight),
+    makingRate: parseFloat(product.mkg_rate),
+    makingAmount: parseFloat(product.mkg_amount),
+    netAmount: parseFloat(product.net_amount),
+    barcode: product.barcode
                 }));
     
                 setProducts(transformedProducts);
@@ -95,28 +82,16 @@ const Products = () => {
     className="whitespace-nowrap table-hover"
     records={recordsData}
     columns={[
-        { accessor: 'name', title: 'Name' },
-        { accessor: 'sku', title: 'SKU' },
-        { accessor: 'weightInGrams', title: 'Weight (g)' },
-        { accessor: 'karat', title: 'Karat' },
-        { accessor: 'purity', title: 'Purity (%)' },
-        { accessor: 'pricePerGram', title: 'Price' },
-        { accessor: 'totalPrice', title: 'Total Price' },
-        { accessor: 'addedDate', title: 'Added Date' },
-        { accessor: 'remarks', title: 'Remarks' },
-        { accessor: 'category', title: 'Category' },
-        { accessor: 'subCategory', title: 'Sub-Category' },
-        { accessor: 'designCode', title: 'Design Code' },
-        { accessor: 'discount', title: 'Discount (%)' },
-        { accessor: 'gender', title: 'Gender' },
-        { accessor: 'goldType', title: 'Gold Type' },
-        { accessor: 'hallmark', title: 'Hallmark' },
-        { accessor: 'hasStones', title: 'Has Stones' },
-        { accessor: 'stoneType', title: 'Stone Type' },
-        { accessor: 'stoneWeight', title: 'Stone Weight' },
-        { accessor: 'style', title: 'Style' },
-        { accessor: 'size', title: 'Size' },
-        { accessor: 'dimensions', title: 'Dimensions (L x W x H)' },
+        { accessor: 'stockCode', title: 'Stock Code' },
+        { accessor: 'description', title: 'Description' },
+        { accessor: 'grossWeight', title: 'Gross Weight (g)' },
+        { accessor: 'stoneWeight', title: 'Stone Weight (g)' },
+        { accessor: 'netWeight', title: 'Net Weight (g)' },
+        { accessor: 'pureWeight', title: 'Pure Weight (g)' },
+        { accessor: 'makingRate', title: 'Making Rate (%)' },
+        { accessor: 'makingAmount', title: 'Making Charges (₹)' },
+        { accessor: 'netAmount', title: 'Net Amount (₹)' },
+        { accessor: 'barcode', title: 'Barcode' }
     ]}
     totalRecords={products.length}
     recordsPerPage={pageSize}

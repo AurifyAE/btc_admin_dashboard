@@ -383,32 +383,32 @@ const ReturnCartOfAdmin = () => {
                             records={selectedSalesPerson.returnAppliedProducts}
                             columns={[
                                 {
-                                    accessor: 'productName',
-                                    title: 'Product Name',
+                                    accessor: 'description',
+                                    title: 'Description',
                                     sortable: true,
                                     render: (record: Product) => {
                                         const details = record.productDetails || record.productId;
-                                        return details?.name || 'N/A';
+                                        return details?.description || 'N/A';
                                     },
                                 },
                                 {
-                                    accessor: 'sku',
-                                    title: 'SKU',
+                                    accessor: 'stock_code',
+                                    title: 'Stock Code',
                                     sortable: true,
                                     render: (record: Product) => {
                                         const details = record.productDetails || record.productId;
-                                        return details?.sku || 'N/A';
+                                        return details?.stock_code || 'N/A';
                                     },
                                 },
-                                {
-                                    accessor: 'category',
-                                    title: 'Category',
-                                    sortable: true,
-                                    render: (record: Product) => {
-                                        const details = record.productDetails || record.productId;
-                                        return details?.category || 'N/A';
-                                    },
-                                },
+                                // {
+                                //     accessor: 'category',
+                                //     title: 'Category',
+                                //     sortable: true,
+                                //     render: (record: Product) => {
+                                //         const details = record.productDetails || record.productId;
+                                //         return details?.category || 'N/A';
+                                //     },
+                                // },
                                 {
                                     accessor: 'actions',
                                     title: 'Actions',

@@ -110,10 +110,11 @@ const ProductInHand = () => {
                         className="whitespace-nowrap table-hover"
                         records={recordsData}
                         columns={[
-                            { accessor: 'productId.sku', title: 'SKU' },
-                            { accessor: 'productId.name', title: 'Product Name' },
-                            { accessor: 'productId.category', title: 'Category' },
-                            { accessor: 'productId.price', title: 'Price' },
+                            { accessor: 'productId.stock_code', title: 'Stock Code' },
+                            { accessor: 'productId.description', title: 'Description' },
+                            { accessor: 'productId.net_weight', title: 'Net Weight (g)' },
+                            { accessor: 'productId.net_amount', title: 'Net Amount (₹)' }
+                            
                         ]}
                         highlightOnHover
                         withBorder

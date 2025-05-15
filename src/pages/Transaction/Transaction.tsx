@@ -72,7 +72,7 @@ const Infobox = () => {
 
             const transformedProducts = response.data.products.map((product: any) => ({
                 value: product._id, // Use _id for the value to ensure consistency
-                label: `${product.name} [${product.sku}]`, // Add SKU in brackets
+                label: `${product.description} [${product.stock_code}]`, // Add SKU in brackets
                 ...product, // Include all product details
             }));
 

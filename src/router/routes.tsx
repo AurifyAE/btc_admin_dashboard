@@ -116,11 +116,11 @@ const ReturnCart = lazy(() => import('../pages/ReturnCart/ReturnCart'));
 const routes = [
     // dashboard
     {
-        path: '/dashboard',
+        path: '/',
         element: <Index />,
     },
     {
-        path: '/',
+        path: '/products',
         element: <Products />,
     },
     {

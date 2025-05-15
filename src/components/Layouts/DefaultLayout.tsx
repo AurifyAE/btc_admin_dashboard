@@ -64,7 +64,7 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
                         </svg>
                     </div>
                 )}
-                <div className="fixed bottom-6 ltr:right-6 rtl:left-6 z-50">
+                {/* <div className="fixed bottom-6 ltr:right-6 rtl:left-6 z-50">
                     {showTopButton && (
                         <button type="button" className="btn btn-outline-primary rounded-full p-2 animate-pulse bg-[#fafafa] dark:bg-[#060818] dark:hover:bg-primary" onClick={goToTop}>
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
@@ -72,7 +72,7 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
                             </svg>
                         </button>
                     )}
-                </div>
+                </div> */}
 
                 {/* BEGIN APP SETTING LAUNCHER */}
                 {/* <Setting /> */}

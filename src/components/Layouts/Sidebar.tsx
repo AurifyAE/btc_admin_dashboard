@@ -45,6 +45,7 @@ import IconClipboardText from '../Icon/IconClipboardText';
 import IconFolder from '../Icon/IconFolder';
 import IconLogout from '../Icon/IconLogout';
 import Swal from 'sweetalert2';
+import IconHome from '../Icon/IconHome';
 
 const Sidebar = () => {
     const [currentMenu, setCurrentMenu] = useState<string>('');
@@ -158,6 +159,14 @@ const Sidebar = () => {
                                     <li className="nav-item">
                                         <NavLink to="/" className="group">
                                             <div className="flex items-center">
+                                                <IconHome className="group-hover:!text-primary shrink-0" />
+                                                <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Dashboard')}</span>
+                                            </div>
+                                        </NavLink>
+                                    </li>
+                                    <li className="nav-item">
+                                        <NavLink to="/products" className="group">
+                                            <div className="flex items-center">
                                                 <IconBox className="group-hover:!text-primary shrink-0" />
                                                 <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Products')}</span>
                                             </div>
@@ -250,7 +259,7 @@ const Sidebar = () => {
                                 </>
                             )}
 
-                            <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1">
+                            <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1 mt-10">
                             <div className="dropdown shrink-0 w-full">
                             <button type="button" className="btn btn-danger w-full" onClick={handleLogout}>
                                 <IconLogout className="mr-4" />
@@ -258,7 +267,7 @@ const Sidebar = () => {
                             </button>
                         </div>
                             </h2>
-                            <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1">
+                            {/* <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1">
                                 <IconMinus className="w-4 h-5 flex-none hidden" />
                                 <span>{t('apps')}</span>
                             </h2>
@@ -838,7 +847,7 @@ const Sidebar = () => {
                                         <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('documentation')}</span>
                                     </div>
                                 </NavLink>
-                            </li>
+                            </li> */}
                         </ul>
                     </PerfectScrollbar>
                 </div>
