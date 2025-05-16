@@ -65,6 +65,8 @@ const initialState = {
     ],
 };
 
+const userRole = localStorage.getItem('userRole') || 'admin'; // default to admin if not set
+
 const themeConfigSlice = createSlice({
     name: 'auth',
     initialState: initialState,
@@ -134,7 +136,12 @@ const themeConfigSlice = createSlice({
         },
 
         setPageTitle(state, { payload }) {
-            document.title = `${payload} | BTC Admin`;
+            if(userRole === 'admin') {
+                document.title = `${payload} | BTC Admin`;
+            }else{
+                document.title = `${payload} | BTC Sales`;
+            }
+           
         },
     },
 });

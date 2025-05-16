@@ -78,13 +78,15 @@ const ReturnCartOfAdmin = () => {
     const [sortStatus, setSortStatus] = useState<SortStatus>({ columnAccessor: 'name', direction: 'asc' });
 
     const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
     const backendUrl = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            navigate('/auth/cover-login'); // Redirect to login if token doesn't exist
+        if (!token || userRole !== 'admin') {
+            navigate('/auth/cover-login');
+            return;
         }
+        
     }, [navigate]);
 
     useEffect(() => {

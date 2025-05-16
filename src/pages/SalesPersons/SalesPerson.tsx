@@ -13,7 +13,6 @@ const Contacts = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const backendUrl = import.meta.env.VITE_API_URL;
-    const token = localStorage.getItem('authToken');
 
     // State variables
     const [addContactModal, setAddContactModal] = useState(false);
@@ -35,6 +34,11 @@ const Contacts = () => {
         assignedLocation: '',
     });
     const [search, setSearch] = useState('');
+
+    // Validation states
+    const [emailError, setEmailError] = useState('');
+    const [phoneError, setPhoneError] = useState('');
+
     // Fetch data on component mount
     useEffect(() => {
         dispatch(setPageTitle('Sales Persons'));
@@ -43,10 +47,13 @@ const Contacts = () => {
         fetchLocations();
     }, []);
 
+    const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
+
     useEffect(() => {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            navigate('/auth/cover-login'); // Redirect to home if token exists
+        if (!token || userRole !== 'admin') {
+            navigate('/auth/cover-login');
+            return;
         }
     }, [navigate]);
 
@@ -76,16 +83,62 @@ const Contacts = () => {
         }
     };
 
-    // Fetch contacts
+    // Validate email
+    const validateEmail = (email: string) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email) {
+            setEmailError('Email is required');
+            return false;
+        } else if (!emailRegex.test(email)) {
+            setEmailError('Please enter a valid email address');
+            return false;
+        } else {
+            setEmailError('');
+            return true;
+        }
+    };
 
+    // Validate phone
+    const validatePhone = (phone: string) => {
+        // Regex for phone - allows different formats including international
+        const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
+        if (!phone) {
+            setPhoneError('Phone number is required');
+            return false;
+        } else if (!phoneRegex.test(phone)) {
+            setPhoneError('Please enter a valid phone number');
+            return false;
+        } else {
+            setPhoneError('');
+            return true;
+        }
+    };
+
+    // Handle email change with validation
+    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setEmail(value);
+        validateEmail(value);
+    };
+
+    // Handle phone change with validation
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setPhone(value);
+        validatePhone(value);
+    };
 
     // Edit modal
     const editModal = async (id: any) => {
         setEditIs(true);
         setAddContactModal(true);
         setUid(id);
+        // Reset validation errors
+        setEmailError('');
+        setPhoneError('');
+
         try {
-            const response = await axios.get(`${backendUrl}/admin/get-sales-person/${id}`,{
+            const response = await axios.get(`${backendUrl}/admin/get-sales-person/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             const { name, email, phone, assignedLocation } = response.data.salesperson;
@@ -99,35 +152,46 @@ const Contacts = () => {
         }
     };
 
-
     // Save salesperson
     const saveSalesPerson = async () => {
-        if (!name || !email || !phone || !assignedLocation) {
-            showMessage('Name, email, phone and location are required.', 'error');
+        // Validate all fields before submission
+        const isEmailValid = validateEmail(email);
+        const isPhoneValid = validatePhone(phone);
+
+        if (!name) {
+            showMessage('Name is required.', 'error');
             return;
         }
-    
-        const url = editIs
-            ? `${backendUrl}/admin/update-sales-person/${uid}`
-            : `${backendUrl}/admin/add-sales-person`;
-    
+
+        if (!assignedLocation) {
+            showMessage('Location is required.', 'error');
+            return;
+        }
+
+        if (!isEmailValid || !isPhoneValid) {
+            showMessage('Please correct the errors before submitting.', 'error');
+            return;
+        }
+
+        const url = editIs ? `${backendUrl}/admin/update-sales-person/${uid}` : `${backendUrl}/admin/add-sales-person`;
+
         const formData = new FormData();
         formData.append('name', name);
         formData.append('email', email);
         formData.append('phone', phone);
         formData.append('assignedLocation', assignedLocation);
-    
+
         if (image) {
             formData.append('image', image); // Make sure `image` is a File, not FileList
         }
-    
+
         const config = {
             headers: {
                 Authorization: `Bearer ${token}`,
                 'Content-Type': 'multipart/form-data',
             },
         };
-    
+
         try {
             if (editIs) {
                 await axios.put(url, formData, config);
@@ -136,13 +200,16 @@ const Contacts = () => {
                 await axios.post(url, formData, config);
                 showMessage('Salesperson created successfully');
             }
-    
+
             setEditIs(false);
             setName('');
             setEmail('');
             setPhone('');
             setAssignedLocation('');
             setImage(null);
+            // Reset validation errors
+            setEmailError('');
+            setPhoneError('');
             fetchSalesPersons();
             setAddContactModal(false);
         } catch (error) {
@@ -150,7 +217,6 @@ const Contacts = () => {
             showMessage('Failed to save salesperson', 'error');
         }
     };
-    
 
     // Delete salesperson
     const deleteSalesperson = async (id: any) => {
@@ -162,7 +228,7 @@ const Contacts = () => {
             confirmButtonText: 'Yes, delete it!',
             cancelButtonText: 'Cancel',
         });
-    
+
         if (result.isConfirmed) {
             try {
                 await axios.delete(`${backendUrl}/admin/delete-sales-person/${id}`, {
@@ -176,7 +242,6 @@ const Contacts = () => {
             }
         }
     };
-    
 
     // Open modal
     const openModal = (contact = null) => {
@@ -191,6 +256,16 @@ const Contacts = () => {
                 assignedLocation: '',
             });
         }
+
+        // Reset form fields and validation errors
+        setName('');
+        setEmail('');
+        setPhone('');
+        setAssignedLocation('');
+        setImage(null);
+        setEmailError('');
+        setPhoneError('');
+        setEditIs(false);
         setAddContactModal(true);
     };
 
@@ -210,7 +285,7 @@ const Contacts = () => {
             timer: 3000,
         });
     };
-
+console.log('Salespersons:', salespersons);
     return (
         <div>
             {/* Header */}
@@ -231,8 +306,10 @@ const Contacts = () => {
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Phone</th>
-                                <th>Location</th>
                                 <th>ID</th>
+                                <th>Product in hand</th>
+                                <th>Pending to approve</th>
+                                <th>In Return</th>
                                 <th className="!text-center">Actions</th>
                             </tr>
                         </thead>
@@ -258,11 +335,18 @@ const Contacts = () => {
                                     <td>{person?.email}</td>
                                     <td>{person?.phone}</td>
                                     {/* Access the specific property of assignedLocation */}
-                                    <td>{person?.assignedLocation?.locationName || 'N/A'}</td>
+                                    {/* <td>{person?.assignedLocation?.locationName || 'N/A'}</td> */}
                                     <td>{person?.salespersonId}</td>
+                                    <td>{person?.assignedProducts.length}</td>
+                                    <td>{person?.pendingProducts.length}</td>
+                                    <td>{person?.returnAppliedProducts.length}</td>
                                     <td>
                                         <div className="flex gap-4 items-center justify-center">
-                                            <button type="button" className="btn btn-sm btn-outline-primary" onClick={()=> editModal(person._id)}>  
+                                            <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => navigate(`/spprofile/${person._id}`)}>
+                                                View
+                                            </button>
+
+                                            <button type="button" className="btn btn-sm btn-outline-primary" onClick={() => editModal(person._id)}>
                                                 Edit
                                             </button>
                                             <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => deleteSalesperson(person._id)}>
@@ -313,11 +397,29 @@ const Contacts = () => {
                                             </div>
                                             <div className="mb-5">
                                                 <label htmlFor="email">Email</label>
-                                                <input id="email" type="email" placeholder="Enter Email" className="form-input" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                                <input
+                                                    id="email"
+                                                    type="email"
+                                                    placeholder="Enter Email"
+                                                    className={`form-input ${emailError ? 'border-danger' : ''}`}
+                                                    value={email}
+                                                    onChange={handleEmailChange}
+                                                    onBlur={() => validateEmail(email)}
+                                                />
+                                                {emailError && <span className="text-danger text-xs mt-1">{emailError}</span>}
                                             </div>
                                             <div className="mb-5">
                                                 <label htmlFor="phone">Phone</label>
-                                                <input id="phone" type="text" placeholder="Enter Phone" className="form-input" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                                                <input
+                                                    id="phone"
+                                                    type="text"
+                                                    placeholder="Enter Phone"
+                                                    className={`form-input ${phoneError ? 'border-danger' : ''}`}
+                                                    value={phone}
+                                                    onChange={handlePhoneChange}
+                                                    onBlur={() => validatePhone(phone)}
+                                                />
+                                                {phoneError && <span className="text-danger text-xs mt-1">{phoneError}</span>}
                                             </div>
                                             <div className="mb-5">
                                                 <label htmlFor="assignedLocation">Location</label>

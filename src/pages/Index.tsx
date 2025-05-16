@@ -5,6 +5,20 @@ import { setPageTitle } from '../store/themeConfigSlice';
 import IconX from '../components/Icon/IconX';
 import axios from 'axios';
 import useMarketData from './hooks/userMarketData';
+import ReactApexChart from 'react-apexcharts';
+import { ApexOptions } from 'apexcharts'; // Add this import
+import { useNavigate } from 'react-router-dom';
+
+interface SeriesData {
+    name: string;
+    data: number[];
+}
+  
+// Update this interface to use ApexOptions
+interface ChartState {
+    series: SeriesData[];
+    options: ApexOptions; // Changed from ChartOptions to ApexOptions
+}
 
 interface MarketData {
     initialBid: number;
@@ -16,16 +30,25 @@ interface MarketData {
     symbol: string;
     marketOpenTimestamp: string | number | null; 
     nextMarketOpen: string | number | null; 
-
     // Add other expected properties if needed
-  }
+}
   
-
 const Index = () => {
     const dispatch = useDispatch();
     useEffect(() => {
         dispatch(setPageTitle('Sales Admin'));
     });
+const navigate = useNavigate();
+    const token = localStorage.getItem('authToken');
+const userRole = localStorage.getItem('userRole');
+
+    useEffect(() => {
+        if (!token || userRole !== 'admin') {
+            navigate('/auth/cover-login');
+            return;
+        }
+        
+    }, [navigate]);
 
     const [loading, setLoading] = useState(false);
     const [goldRate, setGoldRate] = useState<number | null>(null);
@@ -35,15 +58,32 @@ const Index = () => {
     const [updateMessage, setUpdateMessage] = useState<string>('');
     const [updateStatus, setUpdateStatus] = useState<'success' | 'error' | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [chartData, setChartData] = useState<ChartState>({
+        series: [
+          {
+            name: 'Offer',
+            data: [],
+          },
+        ],
+        options: {
+          chart: {
+            type: 'line' as const, // Fix: use 'as const' to ensure correct typing
+            height: 350,
+          },
+          xaxis: {
+            categories: [],
+          },
+          title: {
+            text: 'Market Data',
+            align: 'left' as const, // Fix: use 'as const' for align property
+          },
+        },
+      });
     
     // Using the WebSocket hook to get real-time market data
     const { marketData } = useMarketData(['GOLD']) as { marketData: MarketData | null };
 
-    
-    const token = localStorage.getItem('authToken');
     const backendUrl = import.meta.env.VITE_API_URL;
-
-  
 
     // Function to calculate time difference
     const calculateTimeAgo = (updatedAt: string) => {
@@ -164,7 +204,6 @@ const Index = () => {
         }
     }, [marketData]);
     
-
     const openModal = () => {
         // Set the initial value in the modal to the current rate if available
         if (goldRate !== null) {
@@ -179,15 +218,35 @@ const Index = () => {
         setUpdateStatus(null);
     };
 
-    
-  
+    useEffect(() => {
+        if (marketData) {
+            setChartData((prev) => ({
+                ...prev,
+                series: [
+                    {
+                        name: 'Offer',
+                        data: [...prev.series[0].data, marketData.offer],
+                    },
+                ],
+                options: {
+                    ...prev.options,
+                    xaxis: {
+                        ...(prev.options.xaxis ?? {}),
+                        categories: [
+                            ...(prev.options.xaxis?.categories ?? []),
+                            new Date().toLocaleTimeString(),
+                        ],
+                    },
+                }
+                
+            }));
+        }
+    }, [marketData]);
 
     return (
         <div>
             <div className="pt-5">
-                <div className="grid xl:grid-cols-3 gap-6 mb-6">
-                    
-
+                <div className="grid xl:grid-cols-2 gap-6 mb-6">
                     <div className="panel h-full">
                         <div className="flex items-center justify-between mb-5">
                             <h5 className="font-semibold text-lg dark:text-white-light">Gold Market Data</h5>
@@ -195,7 +254,6 @@ const Index = () => {
                             {/* Real-time indicator */}
                             {marketData && (
                                 <div className="flex items-center gap-2">
-                                  
                                     <span className="px-2 py-1 rounded-full text-xs bg-success bg-opacity-20 text-success flex items-center">
                                         <span className="w-2 h-2 rounded-full bg-success mr-1 animate-pulse"></span>
                                         Live
@@ -233,62 +291,14 @@ const Index = () => {
                             {marketData && (
                                 <div className="bg-white dark:bg-gray-900 rounded-md overflow-hidden mb-4">
                                     <div className="grid grid-cols-2 gap-4 p-4">
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">Symbol</span>
-                                            <span className="font-medium">{marketData.symbol || 'Gold'}</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">Epic</span>
-                                            <span className="font-medium">{marketData.epic || '-'}</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">Bid</span>
-                                            <span className="font-medium">${marketData.bid?.toFixed(2) || '-'}</span>
-                                        </div>
+                                       
                                         <div className="flex flex-col">
                                             <span className="text-xs text-gray-500 dark:text-gray-400">Offer</span>
                                             <span className="font-medium">${marketData.offer?.toFixed(2) || '-'}</span>
                                         </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">High</span>
-                                            <span className="font-medium text-success">${marketData.high?.toFixed(2) || '-'}</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">Low</span>
-                                            <span className="font-medium text-danger">${marketData.low?.toFixed(2) || '-'}</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">Initial Bid</span>
-                                            <span className="font-medium">${marketData.initialBid?.toFixed(2) || '-'}</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">Spread</span>
-                                            <span className="font-medium">
-                                                {marketData.bid && marketData.offer ? 
-                                                    `$${(marketData.offer - marketData.bid).toFixed(2)}` : 
-                                                    '-'}
-                                            </span>
-                                        </div>
+                                      
                                     </div>
-                                    
-                                    {/* Market timing information */}
-                                    <div className="border-t border-gray-100 dark:border-gray-800 p-4">
-                                        <div className="flex flex-col space-y-2">
-                                            {marketData.marketOpenTimestamp && (
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400">Market Open Time</span>
-                                                    <span className="text-sm">{formatDate(String(marketData.marketOpenTimestamp))}</span>
-                                                    </div>
-                                            )}
-                                            
-                                            {marketData.nextMarketOpen && (
-                                                <div className="flex flex-col">
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400">Next Market Open</span>
-                                                    <span className="text-sm">{formatDate(String(marketData.nextMarketOpen))}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
+                                  
                                 </div>
                             )}
                             
@@ -301,15 +311,6 @@ const Index = () => {
                                     </div>
                                 )}
                             </div>
-                            
-                            {/* <button 
-                                type="button" 
-                                className="btn btn-outline-primary mt-4"
-                                onClick={fetchGoldRate}
-                                disabled={loading || !!marketData} // Disable if we have real-time data
-                            >
-                                {marketData ? 'Using Live Data' : 'Refresh'}
-                            </button> */}
                         </div>
                         
                         {/* Modal for updating rate */}
@@ -372,9 +373,31 @@ const Index = () => {
                                 </div>
                             </div>
                         )}
+                        
+                    </div>
+                    <div>
+            <div >
+                <div >
+                    <div className="panel h-full">
+                        <h5 className="font-semibold text-lg dark:text-white-light">Gold Market Data</h5>
+                        {marketData && (
+                            <div className="mt-4">
+                                <ReactApexChart
+                                    options={chartData.options}
+                                    series={chartData.series}
+                                    type="line"
+                                    height={350}
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
+        </div>
+                </div>
+                
+            </div>
+           
         </div>
     );
 };

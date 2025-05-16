@@ -13,16 +13,17 @@ const Products = () => {
     const PAGE_SIZES = [10, 20, 30, 50, 100];
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [recordsData, setRecordsData] = useState([]);
-
-    const token = localStorage.getItem('authToken');
-
     const backendUrl = import.meta.env.VITE_API_URL;
 
+    const token = localStorage.getItem('authToken');
+const userRole = localStorage.getItem('userRole');
+
     useEffect(() => {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            navigate('/auth/cover-login'); // Redirect to home if token exists
+        if (!token || userRole !== 'admin') {
+            navigate('/auth/cover-login');
+            return;
         }
+        
     }, [navigate]);
 
     useEffect(() => {

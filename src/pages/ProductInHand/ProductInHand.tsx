@@ -24,6 +24,15 @@ const ProductInHand = () => {
         columnAccessor: 'id',
         direction: 'asc',
     });
+
+
+    useEffect(() => {
+        if (!token || userRole !== 'salesperson') {
+            navigate('/auth/cover-login');
+            return;
+        }
+        
+    }, [navigate]);
     const [selectedRecords, setSelectedRecords] = useState<any[]>([]); // Added state for selected records
 
     const fetchProductsForUser = async (userId: string) => {
@@ -58,10 +67,7 @@ const ProductInHand = () => {
     useEffect(() => {
         dispatch(setPageTitle('Products in Hand'));
 
-        if (!token || userRole !== 'salesperson') {
-            navigate('/auth/cover-login');
-            return;
-        }
+  
 
         try {
             const storedUserData = localStorage.getItem('userData');

@@ -11,6 +11,7 @@ import 'jspdf-autotable'; // For easy table creation
 import { saveAs } from 'file-saver';
 import FileSaver from 'file-saver';
 import autoTable from 'jspdf-autotable';
+import Swal from 'sweetalert2';
 
 const Add = () => {
     const dispatch = useDispatch();
@@ -42,6 +43,14 @@ const Add = () => {
     const handleDateChange = (e: any) => {
         setInvoiceDate(new Date(e.target.value));
     };
+
+    useEffect(() => {
+        if (!token || userRole !== 'salesperson') {
+            navigate('/auth/cover-login');
+            return;
+        }
+        
+    }, [navigate]);
 
     useEffect(() => {
         // Fetch initial gold rate
@@ -151,11 +160,7 @@ const Add = () => {
     useEffect(() => {
         dispatch(setPageTitle('Products in Hand'));
 
-        if (!token || userRole !== 'salesperson') {
-            navigate('/auth/cover-login');
-            return;
-        }
-
+  
         try {
             const storedUserData = localStorage.getItem('userData');
             if (storedUserData) {
@@ -407,19 +412,37 @@ const Add = () => {
     console.log('selected Products', items);
 
     const handleCreateInvoice = async () => {
-        // Set loading state to true at the beginning
+        // First show confirmation dialog
+        const result = await Swal.fire({
+            title: 'Confirm Invoice Creation',
+            text: 'Are you sure you want to create this invoice?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, create it!',
+            cancelButtonText: 'Cancel'
+        });
+    
+        // If user cancels, exit the function
+        if (!result.isConfirmed) {
+            showMessage('Invoice creation cancelled', 'info');
+            return;
+        }
+    
+        // Proceed with invoice creation if confirmed
         setLoading(true);
-
+    
         try {
             // Validate data before processing
             if (!items || items.length === 0) {
                 throw new Error('No items added to invoice');
             }
-
+    
             if (!selectedUser) {
                 throw new Error('No customer selected');
             }
-
+    
             // Ensure all numeric values are properly defined
             const safeSubtotal = Number(subtotal) || 0;
             const safeTaxAmount = Number(taxAmount) || 0;
@@ -429,7 +452,7 @@ const Add = () => {
             const safeDiscount = Number(discount) || 0;
             const safeShippingRate = Number(shippingRate) || 0;
             const safeGoldRate = goldRate ? Number(goldRate) || 0 : null;
-
+    
             // Prepare the invoice data
             const invoiceData = {
                 invoiceNumber: invoiceNumberIs || `INV-${Date.now()}`,
@@ -469,7 +492,7 @@ const Add = () => {
                 gramRate,
                 salesperson,
             };
-
+    
             // First, make the API call to the backend
             const response = await fetch(`${backendUrl}/salesperson/create-invoice`, {
                 method: 'POST',
@@ -479,23 +502,23 @@ const Add = () => {
                 },
                 body: JSON.stringify(invoiceData),
             });
-
+    
             // Check if the API call was successful
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Failed to save invoice to the server');
             }
-
+    
             // If API call is successful, proceed with generating PDF
             const responseData = await response.json();
             console.log('Invoice saved successfully:', responseData);
-
+    
             // Generate PDF
             const pdfBlob = await generateInvoicePDF(invoiceData);
-
+    
             // Save the PDF file
             const fileName = `Invoice-${invoiceNumberIs}.pdf`;
-
+    
             // Create download link
             const url = URL.createObjectURL(pdfBlob as Blob);
             const link = document.createElement('a');
@@ -505,19 +528,19 @@ const Add = () => {
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-
+    
             console.log('Invoice PDF generated and downloaded successfully!');
-
+    
             // Show success message
-            alert('Invoice created successfully!');
-
+            showMessage('Invoice created successfully!', 'success');
+    
             // Reload the page after a short delay to ensure PDF download starts
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         } catch (error) {
             console.error('Error generating invoice:', error);
-            alert(`Failed to generate invoice: ${error instanceof Error ? error.message : 'Please try again'}`);
+            showMessage(`Failed to generate invoice: ${error instanceof Error ? error.message : 'Please try again'}`, 'error');
         } finally {
             // Ensure loading is set to false in all cases
             setLoading(false);
@@ -704,6 +727,17 @@ const Add = () => {
         });
     };
 
+    const showMessage = (msg: string = '', type: 'success' | 'error' | 'warning' | 'info' | 'question' = 'success') => {
+        Swal.fire({
+            icon: type,
+            title: msg,
+            toast: true,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+        });
+    };
+
     return (
         <div className="flex xl:flex-row flex-col gap-2.5">
             <div className="panel px-0 flex-1 py-6 ltr:xl:mr-6 rtl:xl:ml-6">
@@ -740,9 +774,9 @@ const Add = () => {
                             <div className="text-lg">Bill To :-</div>
                             <div className="mt-4 flex items-center">
                                 <label htmlFor="reciever-name" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                    User
+                                    Customer
                                 </label>
-                                <Select placeholder="Select or search user..." className="form-input flex-1 p-0 border-white" value={selectedUser} options={users} onChange={handleUserChange} />
+                                <Select placeholder="Select or search customers..." className="form-input flex-1 p-0 border-white" value={selectedUser} options={users} onChange={handleUserChange} />
                             </div>
 
                             <div className="mt-4 flex items-center">
@@ -817,52 +851,19 @@ const Add = () => {
                                 <input id="acno" readOnly type="text" name="acno" className="form-input flex-1" value={salesperson?.name} />
                             </div>
 
-                            {/* <div className="flex items-center mt-4">
-                                <label htmlFor="is-fixed" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                    Fixed
-                                </label>
-                                <input
-                                    style={{ width: '40px', height: '40px', borderRadius: '8px' }}
-                                    id="is-fixed"
-                                    type="checkbox"
-                                    name="is-fixed"
-                                    className="form-input form-checkbox text-success rounded-full"
-                                    checked={isChecked}
-                                    onChange={(e) => setIsChecked(e.target.checked)}
-                                />
-                            </div> */}
+                         
                         </div>
                     </div>
                 </div>
                 <div className="mt-8 px-4">
-                    <div className="flex items-center mb-4">
-                        <label htmlFor="scanner" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                            Scan Product
-                        </label>
-                        <input
-                            id="scanner"
-                            type="text"
-                            value={scannedProductId}
-                            onChange={(e) => setScannedProductId(e.target.value)}
-                            // onKeyDown={(e) => e.key === 'Enter' && handleScanProduct()}
-                            className="form-input flex-1"
-                            placeholder="Scan or enter product ID"
-                        />
-                        <button
-                            type="button"
-                            className="btn btn-primary ml-2"
-                            // onClick={handleScanProduct}
-                        >
-                            Add
-                        </button>
-                    </div>
+                 
                     <div className="flex items-center mb-4">
                         <label htmlFor="product-select" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
                             Select Products
                         </label>
                         <Select
                             id="product-select"
-                            placeholder="Select multiple products..."
+                            placeholder="Select or scan multiple products..."
                             options={productOptions}
                             value={selectedProducts}
                             onChange={(selected) => handleProductSelect(selected)}
@@ -973,7 +974,7 @@ const Add = () => {
                                 </div>
                                 <div>${(taxAmount ?? 0).toFixed(2)}</div>
                             </div>
-                            <div className="flex items-center justify-between mt-4">
+                            {/* <div className="flex items-center justify-between mt-4">
                                 <div className="flex items-center">
                                     <span>Discount(%)</span>
                                     <input
@@ -989,7 +990,7 @@ const Add = () => {
                                     />
                                 </div>
                                 <div>${(discountAmount ?? 0).toFixed(2)}</div>
-                            </div>
+                            </div> */}
                             <div className="flex items-center justify-between mt-4 font-semibold">
                                 <div>Total</div>
                                 <div>${total.toFixed(2)}</div>
@@ -1003,10 +1004,10 @@ const Add = () => {
                         {loading ? (
                             <>
                                 <span className="loading loading-spinner loading-xs"></span>
-                                Creating...
+                                Processing...
                             </>
                         ) : (
-                            'Create Invoice'
+                            'Sell Products'
                         )}
                     </button>
                 </div>

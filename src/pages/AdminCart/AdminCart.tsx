@@ -14,16 +14,20 @@ const Products = () => {
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
     const [recordsData, setRecordsData] = useState([]);
 
-    const token = localStorage.getItem('authToken');
+  
 
     const backendUrl = import.meta.env.VITE_API_URL;
 
-    useEffect(() => {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            navigate('/auth/cover-login'); // Redirect to home if token exists
-        }
-    }, [navigate]);
+    const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
+    
+        useEffect(() => {
+            if (!token || userRole !== 'admin') {
+                navigate('/auth/cover-login');
+                return;
+            }
+            
+        }, [navigate]);
 
     useEffect(() => {
         dispatch(setPageTitle('Admin Cart'));

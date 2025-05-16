@@ -9,10 +9,17 @@ import axios from 'axios';
 const ProductInHand = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const backendUrl = import.meta.env.VITE_API_URL;
     const token = localStorage.getItem('authToken');
     const userRole = localStorage.getItem('userRole');
-    const backendUrl = import.meta.env.VITE_API_URL;
-
+    useEffect(() => {
+        if (!token || userRole !== 'salesperson') {
+            navigate('/auth/cover-login');
+            return;
+        }
+        
+    }, [navigate]);
+    
     const [userData, setUserData] = useState<any>(null);
     const [productsInHand, setProductsInHand] = useState<any[]>([]);
     const [page, setPage] = useState(1);
@@ -54,14 +61,11 @@ const ProductInHand = () => {
         }
     };
 
+
     useEffect(() => {
         dispatch(setPageTitle('Return Cart'));
 
-        if (!token || userRole !== 'salesperson') {
-            navigate('/auth/cover-login');
-            return;
-        }
-
+   
         try {
             const storedUserData = localStorage.getItem('userData');
             if (storedUserData) {

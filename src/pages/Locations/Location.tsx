@@ -13,7 +13,6 @@ const Contacts = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate()
     const backendUrl = import.meta.env.VITE_API_URL;
-    const token = localStorage.getItem('authToken');
 
     const [locations, setLocations] = useState<any>([]);
     const [locationModal, setLocationModal] = useState(false);
@@ -22,13 +21,16 @@ const Contacts = () => {
     const [location, setLocation] = useState('');
     const [latitudeAndLongitude, setLatitudeAndLongitude] = useState('');
 
-    useEffect(() => {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            navigate('/auth/cover-login'); // Redirect to home if token exists
-        }
-    }, [navigate]);
+    const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
     
+        useEffect(() => {
+            if (!token || userRole !== 'admin') {
+                navigate('/auth/cover-login');
+                return;
+            }
+            
+        }, [navigate]);
     useEffect(() => {
         dispatch(setPageTitle('Locations'));
         fetchLocations();

@@ -6,6 +6,7 @@ import axios from 'axios';
 import Select from 'react-select';
 import IconUser from '../../components/Icon/IconUser';
 import Swal from 'sweetalert2';
+
 type SalespersonOption = {
     label: string;
     value: string;
@@ -25,22 +26,26 @@ const Infobox = () => {
 
     useEffect(() => {
         dispatch(setPageTitle('Transaction'));
-    }, []); // Added dependency array to prevent infinite re-renders
+    }, []);
 
+    const token = localStorage.getItem('authToken');
+    const userRole = localStorage.getItem('userRole');
+    
     useEffect(() => {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-            navigate('/auth/cover-login'); // Redirect to login if token doesn't exist
+        if (!token || userRole !== 'admin') {
+            navigate('/auth/cover-login');
+            return;
         }
     }, [navigate]);
 
     const PAGE_SIZES = [10, 20, 30, 50, 100];
     const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
-    const [allProducts, setAllProducts] = useState([]); // Store the original list of products
-    const [selectedProducts, setSelectedProducts] = useState<any>([]); // Store selected products
+    const [allProducts, setAllProducts] = useState([]); 
+    const [selectedProducts, setSelectedProducts] = useState<any>([]);
     const [salespersons, setSalespersons] = useState([]);
     const [selectedSalesperson, setSelectedSalesperson] = useState<SalespersonOption | null>(null);
-    const token = localStorage.getItem('authToken');
+    const [showProductSelection, setShowProductSelection] = useState(false);
+
     const backendUrl = import.meta.env.VITE_API_URL;
 
     const fetchSalesPersons = async () => {
@@ -49,11 +54,10 @@ const Infobox = () => {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
-            // Transform salespersons data for react-select
             const transformedSalespersons = response.data.salespersons.map((person: any) => ({
                 value: person._id,
-                label: `${person.name} - ${person.salespersonId}`, // Display name and email for better identification
-                ...person, // Include all salesperson details
+                label: `${person.name} - ${person.salespersonId}`,
+                ...person,
             }));
 
             setSalespersons(transformedSalespersons);
@@ -71,9 +75,9 @@ const Infobox = () => {
             });
 
             const transformedProducts = response.data.products.map((product: any) => ({
-                value: product._id, // Use _id for the value to ensure consistency
-                label: `${product.description} [${product.stock_code}]`, // Add SKU in brackets
-                ...product, // Include all product details
+                value: product._id,
+                label: `${product.description} [${product.stock_code}]`,
+                ...product,
             }));
 
             setAllProducts(transformedProducts);
@@ -84,15 +88,26 @@ const Infobox = () => {
 
     useEffect(() => {
         fetchSalesPersons();
-        fetchProducts();
     }, [backendUrl, token]);
 
+    useEffect(() => {
+        if (selectedSalesperson) {
+            fetchProducts();
+        }
+    }, [selectedSalesperson]);
+
     const handleProductChange = (selected: any) => {
-        setSelectedProducts(selected || []); // Update selected products, handle null case
+        setSelectedProducts(selected || []);
     };
 
     const handleSalespersonChange = (selected: any) => {
-        setSelectedSalesperson(selected); // Update selected salesperson
+        setSelectedSalesperson(selected);
+        if (selected) {
+            setShowProductSelection(true);
+        } else {
+            setShowProductSelection(false);
+            setSelectedProducts([]);
+        }
     };
 
     const handleAssignProducts = () => {
@@ -118,13 +133,8 @@ const Infobox = () => {
     
                 showMessage('Products assigned successfully!', 'success');
     
-                // Clear all states
+                // Clear product selection but keep salesperson selected for convenience
                 setSelectedProducts([]);
-                setSelectedSalesperson(null);
-    
-                // Re-fetch products and salespersons
-                fetchProducts();
-                fetchSalesPersons();
             } catch (error) {
                 console.error('Error assigning products:', error);
                 showMessage('Failed to assign products', 'error');
@@ -134,44 +144,44 @@ const Infobox = () => {
         requestForAssignProduct();
     };
 
-      const showMessage = (msg: string = '', type: 'success' | 'error' | 'warning' | 'info' | 'question' = 'success') => {
-            Swal.fire({
-                icon: type,
-                title: msg,
-                toast: true,
-                position: 'top',
-                showConfirmButton: false,
-                timer: 3000,
-            });
-        };
+    const resetSelection = () => {
+        setSelectedSalesperson(null);
+        setSelectedProducts([]);
+        setShowProductSelection(false);
+    };
+
+    const showMessage = (msg: string = '', type: 'success' | 'error' | 'warning' | 'info' | 'question' = 'success') => {
+        Swal.fire({
+            icon: type,
+            title: msg,
+            toast: true,
+            position: 'top',
+            showConfirmButton: false,
+            timer: 3000,
+        });
+    };
+
     return (
         <div>
-            <div className="pt-5 grid lg:grid-cols-2 grid-cols-1 gap-6">
-                {/* Infobox-1 */}
-                <div className="panel" id="infobox_1">
-                    <h1 className="text-2xl font-bold mb-4">Choose Products</h1>
-                    <Select
-                        closeMenuOnSelect={false}
-                        isMulti
-                        options={allProducts}
-                        value={selectedProducts}
-                        onChange={handleProductChange}
-                        placeholder="Select or search products..."
-                        className="mb-6"
-                    />
-                </div>
-
-                {/* Infobox-2 */}
-                <div className="panel" id="infobox_2">
+            <div className="pt-5">
+                {/* Step 1: Choose Salesperson First */}
+                <div className="panel mb-6">
                     <h1 className="text-2xl font-bold mb-4">Choose Sales Person</h1>
-                    <Select value={selectedSalesperson} options={salespersons} onChange={handleSalespersonChange} placeholder="Select or search salesperson..." className="mb-6" />
+                    <Select 
+                        value={selectedSalesperson} 
+                        options={salespersons} 
+                        onChange={handleSalespersonChange} 
+                        placeholder="Select or search salesperson..." 
+                        className="mb-6"
+                        isClearable
+                    />
 
                     {selectedSalesperson && (
                         <div className="mb-5 flex items-center justify-center">
-                            <div className="max-w-[42rem] w-full bg-white shadow-[4px_6px_10px_-3px_#bfc9d4] rounded border border-white-light dark:border-[#1b2e4b] dark:bg-[#191e3a] dark:shadow-none">
+                            <div className="max-w-[32rem] w-full bg-white shadow-[4px_6px_10px_-3px_#bfc9d4] rounded border border-white-light dark:border-[#1b2e4b] dark:bg-[#191e3a] dark:shadow-none">
                                 <div className="flex flex-row items-center p-6 gap-6">
                                     {/* Image Section */}
-                                    <div className="w-[180px] h-[180px] flex-shrink-0 overflow-hidden rounded object-cover border border-white-light dark:border-[#1b2e4b]">
+                                    <div className="w-[150px] h-[150px] flex-shrink-0 overflow-hidden rounded object-cover border border-white-light dark:border-[#1b2e4b]">
                                         {selectedSalesperson?.image?.url ? (
                                             <img alt="cover" src={selectedSalesperson.image.url} className="w-full h-full object-cover" />
                                         ) : (
@@ -192,12 +202,67 @@ const Infobox = () => {
                         </div>
                     )}
                 </div>
-            </div>
 
-            <div className="mt-6">
-                <button type="button" className="btn btn-info w-full" onClick={handleAssignProducts} disabled={!selectedSalesperson || selectedProducts.length === 0}>
-                    Assign Products to {selectedSalesperson ? `${selectedSalesperson.name} - ${selectedSalesperson.salespersonId}` : 'Salesperson'}
-                </button>
+                {/* Step 2: Choose Products (Only shown after selecting a salesperson) */}
+                {showProductSelection && (
+                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-6">
+                        {/* Product Selection Panel */}
+                        <div className="panel" id="infobox_1">
+                            <h1 className="text-2xl font-bold mb-4">Choose Products</h1>
+                            <Select
+                                closeMenuOnSelect={false}
+                                isMulti
+                                options={allProducts}
+                                value={selectedProducts}
+                                onChange={handleProductChange}
+                                placeholder="Select or search products..."
+                                className="mb-6"
+                            />
+                        </div>
+
+                        {/* Selected Products Preview Panel */}
+                        <div className="panel" id="infobox_2">
+                            <h1 className="text-2xl font-bold mb-4">Selected Products</h1>
+                            
+                            {selectedProducts.length > 0 ? (
+                                <div className="max-h-96 overflow-y-auto border rounded p-4">
+                                    {selectedProducts.map((product: any, index: number) => (
+                                        <div key={index} className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium">{product.description}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">SKU: {product.stock_code}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center h-40 border rounded">
+                                    <p className="text-gray-500">No products selected yet</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="mt-6 flex gap-4">
+                    {selectedSalesperson && (
+                        <button type="button" className="btn btn-danger" onClick={resetSelection}>
+                            Reset Selection
+                        </button>
+                    )}
+                    
+                    {showProductSelection && (
+                        <button 
+                            type="button" 
+                            className="btn btn-info flex-1" 
+                            onClick={handleAssignProducts} 
+                            disabled={!selectedSalesperson || selectedProducts.length === 0}
+                        >
+                            Assign {selectedProducts.length} Product{selectedProducts.length !== 1 ? 's' : ''} to {selectedSalesperson?.name}
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

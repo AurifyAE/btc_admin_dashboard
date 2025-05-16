@@ -25,6 +25,16 @@ const Custom = () => {
     });
     const [selectedRecords, setSelectedRecords] = useState<any[]>([]); // State to store selected items
 
+
+
+    useEffect(() => {
+        if (!token || userRole !== 'salesperson') {
+            navigate('/auth/cover-login');
+            return;
+        }
+        
+    }, [navigate]);
+
     const fetchUserById = async (userId: string) => {
         if (!userId) {
             console.error('User ID is undefined or empty');
@@ -55,10 +65,7 @@ const Custom = () => {
     useEffect(() => {
         dispatch(setPageTitle('Profile'));
 
-        if (!token || userRole !== 'salesperson') {
-            navigate('/auth/cover-login');
-            return;
-        }
+     
 
         try {
             const userData = localStorage.getItem('userData');

@@ -1,29 +1,16 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { IRootState } from '../../store';
-import Dropdown from '../../components/Dropdown';
 import { setPageTitle } from '../../store/themeConfigSlice';
 import { useEffect, useState } from 'react';
-import IconCoffee from '../../components/Icon/IconCoffee';
-import IconCalendar from '../../components/Icon/IconCalendar';
-import IconMapPin from '../../components/Icon/IconMapPin';
 import IconMail from '../../components/Icon/IconMail';
 import IconPhone from '../../components/Icon/IconPhone';
-import IconTwitter from '../../components/Icon/IconTwitter';
-import IconDribbble from '../../components/Icon/IconDribbble';
-import IconGithub from '../../components/Icon/IconGithub';
-import IconShoppingBag from '../../components/Icon/IconShoppingBag';
-import IconTag from '../../components/Icon/IconTag';
-import IconCreditCard from '../../components/Icon/IconCreditCard';
-import IconClock from '../../components/Icon/IconClock';
-import IconHorizontalDots from '../../components/Icon/IconHorizontalDots';
-import axios from 'axios';
-import IconLinkedin from '../../components/Icon/IconLinkedin';
-import IconInfoTriangle from '../../components/Icon/IconInfoTriangle';
-import IconInbox from '../../components/Icon/IconInbox';
 import IconInfoCircle from '../../components/Icon/IconInfoCircle';
+import IconMapPin from '../../components/Icon/IconMapPin';
+import axios from 'axios';
 
 const Profile = () => {
+    const { id: paramId } = useParams(); // Get the ID from URL parameters
     const token = localStorage.getItem('authToken');
     const userRole = localStorage.getItem('userRole');
     const dispatch = useDispatch();
@@ -33,22 +20,27 @@ const Profile = () => {
     const [salesperson, setSalesperson] = useState<any>(null);
     const isRtl = useSelector((state: IRootState) => state.themeConfig.rtlClass) === 'rtl' ? true : false;
     
-    const fetchUserById = async (userId: string) => {
+    useEffect(() => {
+        // Check if user is either a salesperson or an admin
+        if (!token || (userRole !== 'salesperson' && userRole !== 'admin')) {
+            navigate('/auth/cover-login');
+            return;
+        }
+    }, [navigate, token, userRole]);
+
+    const fetchUserById = async (userId:any) => {
         if (!userId) {
             console.error('User ID is undefined or empty');
             return;
         }
         
-        console.log('Fetching user with ID:', userId);
         try {
             const response = await axios.get(`${backendUrl}/salesperson/get-sales-person/${userId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            console.log(response.data);
             setSalesperson(response.data.salesperson);
-            // Do something with the response data if needed
         } catch (error) {
             console.error('Error fetching user data:', error);
         }
@@ -58,360 +50,226 @@ const Profile = () => {
     useEffect(() => {
         dispatch(setPageTitle('Profile'));
         
-        if (!token || userRole !== 'salesperson') {
-            navigate('/auth/cover-login');
-            return;
-        }
-        
-        try {
-            const userData = localStorage.getItem('userData');
-            if (userData) {
-                const parsedData = JSON.parse(userData);
-                setData(parsedData);
-            } else {
-                console.error('No user data found in localStorage');
+        // If we have a parameter ID, use that (admin viewing a salesperson's profile)
+        if (paramId) {
+            fetchUserById(paramId);
+        } else {
+            // Otherwise, use logged-in user's data (salesperson viewing own profile)
+            try {
+                const userData = localStorage.getItem('userData');
+                if (userData) {
+                    const parsedData = JSON.parse(userData);
+                    setData(parsedData);
+                } else {
+                    console.error('No user data found in localStorage');
+                }
+            } catch (err) {
+                console.error('Error parsing user data from localStorage:', err);
             }
-        } catch (err) {
-            console.error('Error parsing user data from localStorage:', err);
         }
-    }, [navigate]);
+    }, [dispatch, paramId]);
     
     // Second useEffect to handle data fetching after state is updated
+    // Only run this when there's no paramId (for logged-in user viewing their own profile)
     useEffect(() => {
-        if (data && data.id) {
+        if (!paramId && data && data.id) {
             fetchUserById(data.id);
         }
-    }, [data]);
-    
+    }, [data, paramId]);
+    // Helper function to render product lists
+    const renderProductList = (products: any[], emptyMessage: string) => {
+        if (!products || products.length === 0) {
+            return (
+                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                    {emptyMessage || "No products available"}
+                </div>
+            );
+        }
+
+        return (
+            <div className="table-responsive">
+                <table className="table-striped w-full">
+                    <thead>
+                        <tr>
+                            <th className="px-4 py-2 text-left">Description</th>
+                            <th className="px-4 py-2 text-left">Stock Code</th>
+                            <th className="px-4 py-2 text-left">Gross Weight</th>
+                            <th className="px-4 py-2 text-left">Pure Weight</th>
+                            <th className="px-4 py-2 text-left">MKG Rate</th>
+                            <th className="px-4 py-2 text-left">MKG Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {products.map((item, index) => (
+                            <tr key={index}>
+                                <td className="px-4 py-2">{item.productId?.description || 'N/A'}</td>
+                                <td className="px-4 py-2">{item.productId?.stock_code || 'N/A'}</td>
+                                <td className="px-4 py-2">{item.productId?.gross_weight || 'N/A'}</td>
+                                <td className="px-4 py-2">{item.productId?.pure_weight || 'N/A'}</td>
+                                <td className="px-4 py-2">{item.productId?.mkg_rate || 'N/A'}</td>
+                                <td className="px-4 py-2">{item.productId?.mkg_amount || 'N/A'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+    };
+
+    // Helper function to render sold products list (with different structure)
+    const renderSoldProductList = (products: any[], emptyMessage: string) => {
+        if (!products || products.length === 0) {
+            return (
+                <div className="p-4 text-center text-gray-500 dark:text-gray-400">
+                    {emptyMessage || "No products available"}
+                </div>
+            );
+        }
+
+        return (
+            <div className="table-responsive">
+                <table className="table-striped w-full">
+                    <thead>
+                        <tr>
+                            <th className="px-4 py-2 text-left">Description</th>
+                            <th className="px-4 py-2 text-left">Stock Code</th>
+                            <th className="px-4 py-2 text-left">MKG Rate</th>
+                            <th className="px-4 py-2 text-left">MKG Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {products.map((item, index) => (
+                            <tr key={index}>
+                                <td className="px-4 py-2">{item.description || 'N/A'}</td>
+                                <td className="px-4 py-2">{item.stock_code || item.sku || 'N/A'}</td>
+                                <td className="px-4 py-2">{item.mkg_rate || 'N/A'}</td>
+                                <td className="px-4 py-2">{item.mkg_amount || 'N/A'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        );
+    };
 
     return (
         <div>
             <div className="pt-5">
+                {/* Profile and Product Information Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-5">
+                    {/* Salesperson Profile Panel */}
                     <div className="panel">
                         <div className="flex items-center justify-between mb-5">
                             <h5 className="font-semibold text-lg dark:text-white-light">Profile</h5>
                         </div>
                         <div className="mb-5">
                             <div className="flex flex-col justify-center items-center">
-                                <img src={salesperson?.image.url} alt="img" className="w-24 h-24 rounded-full object-cover  mb-5" />
-                                <p className="font-semibold text-primary text-xl">{salesperson?.name}</p>
+                                <img 
+                                    src={salesperson?.image?.url || '/assets/images/profile-default.png'} 
+                                    alt="Profile" 
+                                    className="w-24 h-24 rounded-full object-cover mb-5" 
+                                />
+                                <p className="font-semibold text-primary text-xl">{salesperson?.name || 'Loading...'}</p>
                             </div>
-                            <ul className="mt-5 flex flex-col max-w-[160px] m-auto space-y-4 font-semibold text-white-dark">
+                            <ul className="mt-5 flex flex-col max-w-[200px] m-auto space-y-4 font-semibold text-white-dark">
                                 <li className="flex items-center gap-2">
                                     <IconInfoCircle className="shrink-0" />
-                                    {salesperson?.salespersonId}
+                                    {salesperson?.salespersonId || 'Loading...'}
                                 </li>
-                                
-                               
                                 <li>
-                                    <button className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2">
                                         <IconMail className="w-5 h-5 shrink-0" />
-                                        <span className="text-primary truncate">{salesperson?.email}</span>
-                                    </button>
+                                        <span className="text-primary truncate">{salesperson?.email || 'Loading...'}</span>
+                                    </div>
                                 </li>
                                 <li className="flex items-center gap-2">
                                     <IconPhone />
                                     <span className="whitespace-nowrap" dir="ltr">
-                                       {salesperson?.phone}
+                                       {salesperson?.phone || 'Loading...'}
                                     </span>
                                 </li>
+                                {salesperson?.assignedLocation && (
+                                    <li className="flex items-center gap-2">
+                                        <IconMapPin />
+                                        <span className="whitespace-nowrap">
+                                            {salesperson.assignedLocation.locationName || 'No location assigned'}
+                                        </span>
+                                    </li>
+                                )}
                             </ul>
-                           
                         </div>
                     </div>
+
+                    {/* Products Information Panel */}
                     <div className="panel lg:col-span-2 xl:col-span-3">
                         <div className="mb-5">
-                            <h5 className="font-semibold text-lg dark:text-white-light">Task</h5>
+                            <h5 className="font-semibold text-lg dark:text-white-light">Products Overview</h5>
                         </div>
-                        <div className="mb-5">
-                            <div className="table-responsive text-[#515365] dark:text-white-light font-semibold">
-                                <table className="whitespace-nowrap">
-                                    <thead>
-                                        <tr>
-                                            <th>Projects</th>
-                                            <th>Progress</th>
-                                            <th>Task Done</th>
-                                            <th className="text-center">Time</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="dark:text-white-dark">
-                                        <tr>
-                                            <td>Figma Design</td>
-                                            <td>
-                                                <div className="h-1.5 bg-[#ebedf2] dark:bg-dark/40 rounded-full flex w-full">
-                                                    <div className="bg-danger rounded-full w-[29.56%]"></div>
-                                                </div>
-                                            </td>
-                                            <td className="text-danger">29.56%</td>
-                                            <td className="text-center">2 mins ago</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Vue Migration</td>
-                                            <td>
-                                                <div className="h-1.5 bg-[#ebedf2] dark:bg-dark/40 rounded-full flex w-full">
-                                                    <div className="bg-info rounded-full w-1/2"></div>
-                                                </div>
-                                            </td>
-                                            <td className="text-success">50%</td>
-                                            <td className="text-center">4 hrs ago</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Flutter App</td>
-                                            <td>
-                                                <div className="h-1.5 bg-[#ebedf2] dark:bg-dark/40 rounded-full flex w-full">
-                                                    <div className="bg-warning rounded-full  w-[39%]"></div>
-                                                </div>
-                                            </td>
-                                            <td className="text-danger">39%</td>
-                                            <td className="text-center">a min ago</td>
-                                        </tr>
-                                        <tr>
-                                            <td>API Integration</td>
-                                            <td>
-                                                <div className="h-1.5 bg-[#ebedf2] dark:bg-dark/40 rounded-full flex w-full">
-                                                    <div className="bg-success rounded-full  w-[78.03%]"></div>
-                                                </div>
-                                            </td>
-                                            <td className="text-success">78.03%</td>
-                                            <td className="text-center">2 weeks ago</td>
-                                        </tr>
-
-                                        <tr>
-                                            <td>Blog Update</td>
-                                            <td>
-                                                <div className="h-1.5 bg-[#ebedf2] dark:bg-dark/40 rounded-full flex w-full">
-                                                    <div className="bg-secondary  rounded-full  w-full"></div>
-                                                </div>
-                                            </td>
-                                            <td className="text-success">100%</td>
-                                            <td className="text-center">18 hrs ago</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Landing Page</td>
-                                            <td>
-                                                <div className="h-1.5 bg-[#ebedf2] dark:bg-dark/40 rounded-full flex w-full">
-                                                    <div className="bg-danger rounded-full  w-[19.15%]"></div>
-                                                </div>
-                                            </td>
-                                            <td className="text-danger">19.15%</td>
-                                            <td className="text-center">5 days ago</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Shopify Dev</td>
-                                            <td>
-                                                <div className="h-1.5 bg-[#ebedf2] dark:bg-dark/40 rounded-full flex w-full">
-                                                    <div className="bg-primary rounded-full w-[60.55%]"></div>
-                                                </div>
-                                            </td>
-                                            <td className="text-success">60.55%</td>
-                                            <td className="text-center">8 days ago</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                        
+                        <div className="mb-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                            <div className="panel bg-primary/10 dark:bg-primary/20">
+                                <div className="flex flex-col">
+                                    <h5 className="text-lg font-semibold mb-3">Assigned Products</h5>
+                                    <p className="text-3xl font-bold">{salesperson?.assignedProducts?.length || 0}</p>
+                                </div>
+                            </div>
+                            
+                            <div className="panel bg-warning/10 dark:bg-warning/20">
+                                <div className="flex flex-col">
+                                    <h5 className="text-lg font-semibold mb-3">Pending Products</h5>
+                                    <p className="text-3xl font-bold">{salesperson?.pendingProducts?.length || 0}</p>
+                                </div>
+                            </div>
+                            
+                            <div className="panel bg-danger/10 dark:bg-danger/20">
+                                <div className="flex flex-col">
+                                    <h5 className="text-lg font-semibold mb-3">Return Applied</h5>
+                                    <p className="text-3xl font-bold">{salesperson?.returnAppliedProducts?.length || 0}</p>
+                                </div>
+                            </div>
+                            
+                            <div className="panel bg-success/10 dark:bg-success/20">
+                                <div className="flex flex-col">
+                                    <h5 className="text-lg font-semibold mb-3">Sold Products</h5>
+                                    <p className="text-3xl font-bold">{salesperson?.selledProducts?.length || 0}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="panel">
-                        <div className="mb-5">
-                            <h5 className="font-semibold text-lg dark:text-white-light">Summary</h5>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="border border-[#ebedf2] rounded dark:bg-[#1b2e4b] dark:border-0">
-                                <div className="flex items-center justify-between p-4 py-2">
-                                    <div className="grid place-content-center w-9 h-9 rounded-md bg-secondary-light dark:bg-secondary text-secondary dark:text-secondary-light">
-                                        <IconShoppingBag />
-                                    </div>
-                                    <div className="ltr:ml-4 rtl:mr-4 flex items-start justify-between flex-auto font-semibold">
-                                        <h6 className="text-white-dark text-[13px] dark:text-white-dark">
-                                            Income
-                                            <span className="block text-base text-[#515365] dark:text-white-light">$92,600</span>
-                                        </h6>
-                                        <p className="ltr:ml-auto rtl:mr-auto text-secondary">90%</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="border border-[#ebedf2] rounded dark:bg-[#1b2e4b] dark:border-0">
-                                <div className="flex items-center justify-between p-4 py-2">
-                                    <div className="grid place-content-center w-9 h-9 rounded-md bg-info-light dark:bg-info text-info dark:text-info-light">
-                                        <IconTag />
-                                    </div>
-                                    <div className="ltr:ml-4 rtl:mr-4 flex items-start justify-between flex-auto font-semibold">
-                                        <h6 className="text-white-dark text-[13px] dark:text-white-dark">
-                                            Profit
-                                            <span className="block text-base text-[#515365] dark:text-white-light">$37,515</span>
-                                        </h6>
-                                        <p className="ltr:ml-auto rtl:mr-auto text-info">65%</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="border border-[#ebedf2] rounded dark:bg-[#1b2e4b] dark:border-0">
-                                <div className="flex items-center justify-between p-4 py-2">
-                                    <div className="grid place-content-center w-9 h-9 rounded-md bg-warning-light dark:bg-warning text-warning dark:text-warning-light">
-                                        <IconCreditCard />
-                                    </div>
-                                    <div className="ltr:ml-4 rtl:mr-4 flex items-start justify-between flex-auto font-semibold">
-                                        <h6 className="text-white-dark text-[13px] dark:text-white-dark">
-                                            Expenses
-                                            <span className="block text-base text-[#515365] dark:text-white-light">$55,085</span>
-                                        </h6>
-                                        <p className="ltr:ml-auto rtl:mr-auto text-warning">80%</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="panel">
-                        <div className="flex items-center justify-between mb-10">
-                            <h5 className="font-semibold text-lg dark:text-white-light">Pro Plan</h5>
-                            <button className="btn btn-primary">Renew Now</button>
-                        </div>
-                        <div className="group">
-                            <ul className="list-inside list-disc text-white-dark font-semibold mb-7 space-y-2">
-                                <li>10,000 Monthly Visitors</li>
-                                <li>Unlimited Reports</li>
-                                <li>2 Years Data Storage</li>
-                            </ul>
-                            <div className="flex items-center justify-between mb-4 font-semibold">
-                                <p className="flex items-center rounded-full bg-dark px-2 py-1 text-xs text-white-light font-semibold">
-                                    <IconClock className="w-3 h-3 ltr:mr-1 rtl:ml-1" />5 Days Left
-                                </p>
-                                <p className="text-info">$25 / month</p>
-                            </div>
-                            <div className="rounded-full h-2.5 p-0.5 bg-dark-light overflow-hidden mb-5 dark:bg-dark-light/10">
-                                <div className="bg-gradient-to-r from-[#f67062] to-[#fc5296] w-full h-full rounded-full relative" style={{ width: '65%' }}></div>
-                            </div>
-                        </div>
-                    </div>
+
+                {/* Product Details Sections */}
+                <div className="grid grid-cols-1 gap-5">
+                    {/* Assigned Products Section */}
                     <div className="panel">
                         <div className="flex items-center justify-between mb-5">
-                            <h5 className="font-semibold text-lg dark:text-white-light">Payment History</h5>
+                            <h5 className="font-semibold text-lg dark:text-white-light">Assigned Products</h5>
                         </div>
-                        <div>
-                            <div className="border-b border-[#ebedf2] dark:border-[#1b2e4b]">
-                                <div className="flex items-center justify-between py-2">
-                                    <h6 className="text-[#515365] font-semibold dark:text-white-dark">
-                                        March
-                                        <span className="block text-white-dark dark:text-white-light">Pro Membership</span>
-                                    </h6>
-                                    <div className="flex items-start justify-between ltr:ml-auto rtl:mr-auto">
-                                        <p className="font-semibold">90%</p>
-                                        <div className="dropdown ltr:ml-4 rtl:mr-4">
-                                            <Dropdown
-                                                offset={[0, 5]}
-                                                placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`}
-                                                btnClassName="hover:text-primary"
-                                                button={<IconHorizontalDots className="opacity-80 hover:opacity-100" />}
-                                            >
-                                                <ul className="!min-w-[150px]">
-                                                    <li>
-                                                        <button type="button">View Invoice</button>
-                                                    </li>
-                                                    <li>
-                                                        <button type="button">Download Invoice</button>
-                                                    </li>
-                                                </ul>
-                                            </Dropdown>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="border-b border-[#ebedf2] dark:border-[#1b2e4b]">
-                                <div className="flex items-center justify-between py-2">
-                                    <h6 className="text-[#515365] font-semibold dark:text-white-dark">
-                                        February
-                                        <span className="block text-white-dark dark:text-white-light">Pro Membership</span>
-                                    </h6>
-                                    <div className="flex items-start justify-between ltr:ml-auto rtl:mr-auto">
-                                        <p className="font-semibold">90%</p>
-                                        <div className="dropdown ltr:ml-4 rtl:mr-4">
-                                            <Dropdown offset={[0, 5]} placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`} button={<IconHorizontalDots className="opacity-80 hover:opacity-100" />}>
-                                                <ul className="!min-w-[150px]">
-                                                    <li>
-                                                        <button type="button">View Invoice</button>
-                                                    </li>
-                                                    <li>
-                                                        <button type="button">Download Invoice</button>
-                                                    </li>
-                                                </ul>
-                                            </Dropdown>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <div className="flex items-center justify-between py-2">
-                                    <h6 className="text-[#515365] font-semibold dark:text-white-dark">
-                                        January
-                                        <span className="block text-white-dark dark:text-white-light">Pro Membership</span>
-                                    </h6>
-                                    <div className="flex items-start justify-between ltr:ml-auto rtl:mr-auto">
-                                        <p className="font-semibold">90%</p>
-                                        <div className="dropdown ltr:ml-4 rtl:mr-4">
-                                            <Dropdown offset={[0, 5]} placement={`${isRtl ? 'bottom-start' : 'bottom-end'}`} button={<IconHorizontalDots className="opacity-80 hover:opacity-100" />}>
-                                                <ul className="!min-w-[150px]">
-                                                    <li>
-                                                        <button type="button">View Invoice</button>
-                                                    </li>
-                                                    <li>
-                                                        <button type="button">Download Invoice</button>
-                                                    </li>
-                                                </ul>
-                                            </Dropdown>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {renderProductList(salesperson?.assignedProducts, "No products have been assigned yet.")}
                     </div>
+
+                    {/* Pending Products Section */}
                     <div className="panel">
                         <div className="flex items-center justify-between mb-5">
-                            <h5 className="font-semibold text-lg dark:text-white-light">Card Details</h5>
+                            <h5 className="font-semibold text-lg dark:text-white-light">Pending Products</h5>
                         </div>
-                        <div>
-                            <div className="border-b border-[#ebedf2] dark:border-[#1b2e4b]">
-                                <div className="flex items-center justify-between py-2">
-                                    <div className="flex-none">
-                                        <img src="/assets/images/card-americanexpress.svg" alt="img" />
-                                    </div>
-                                    <div className="flex items-center justify-between flex-auto ltr:ml-4 rtl:mr-4">
-                                        <h6 className="text-[#515365] font-semibold dark:text-white-dark">
-                                            American Express
-                                            <span className="block text-white-dark dark:text-white-light">Expires on 12/2025</span>
-                                        </h6>
-                                        <span className="badge bg-success ltr:ml-auto rtl:mr-auto">Primary</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="border-b border-[#ebedf2] dark:border-[#1b2e4b]">
-                                <div className="flex items-center justify-between py-2">
-                                    <div className="flex-none">
-                                        <img src="/assets/images/card-mastercard.svg" alt="img" />
-                                    </div>
-                                    <div className="flex items-center justify-between flex-auto ltr:ml-4 rtl:mr-4">
-                                        <h6 className="text-[#515365] font-semibold dark:text-white-dark">
-                                            Mastercard
-                                            <span className="block text-white-dark dark:text-white-light">Expires on 03/2025</span>
-                                        </h6>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <div className="flex items-center justify-between py-2">
-                                    <div className="flex-none">
-                                        <img src="/assets/images/card-visa.svg" alt="img" />
-                                    </div>
-                                    <div className="flex items-center justify-between flex-auto ltr:ml-4 rtl:mr-4">
-                                        <h6 className="text-[#515365] font-semibold dark:text-white-dark">
-                                            Visa
-                                            <span className="block text-white-dark dark:text-white-light">Expires on 10/2025</span>
-                                        </h6>
-                                    </div>
-                                </div>
-                            </div>
+                        {renderProductList(salesperson?.pendingProducts, "No pending products.")}
+                    </div>
+
+                    {/* Return Applied Products Section */}
+                    <div className="panel">
+                        <div className="flex items-center justify-between mb-5">
+                            <h5 className="font-semibold text-lg dark:text-white-light">Return Applied Products</h5>
                         </div>
+                        {renderProductList(salesperson?.returnAppliedProducts, "No return applications.")}
+                    </div>
+
+                    {/* Sold Products Section */}
+                    <div className="panel">
+                        <div className="flex items-center justify-between mb-5">
+                            <h5 className="font-semibold text-lg dark:text-white-light">Sold Products</h5>
+                        </div>
+                        {renderSoldProductList(salesperson?.selledProducts, "No products have been sold yet.")}
                     </div>
                 </div>
             </div>
