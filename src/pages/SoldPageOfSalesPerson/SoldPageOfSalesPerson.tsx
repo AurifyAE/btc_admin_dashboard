@@ -128,116 +128,150 @@ const SoldProducts = () => {
     const generateInvoicePDF = async (invoiceData: any) => {
         setGeneratingPdf(true);
         try {
-            // Create a document - A4 size
             const doc = new jsPDF();
-
+    
             // Set font
             doc.setFont('helvetica');
-
-            // Add company logo/header
+    
+            // Company Header
             doc.setFontSize(20);
             doc.text('BTC', doc.internal.pageSize.width / 2, 20, { align: 'center' });
             doc.setFontSize(10);
             doc.text('123 Business Street, City, Country', doc.internal.pageSize.width / 2, 27, { align: 'center' });
             doc.text('Phone: (123) 456-7890 | Email: info@company.com', doc.internal.pageSize.width / 2, 32, { align: 'center' });
-
-            // Add invoice details
+    
+            // Invoice Details
             doc.setFontSize(16);
             doc.text('Invoice', 20, 45);
             doc.setLineWidth(0.5);
             doc.line(20, 47, 50, 47);
-
+    
             doc.setFontSize(10);
             doc.text(`Invoice Number: ${invoiceData.invoiceNumber}`, 20, 55);
+    
             const date = new Date(invoiceData.invoiceDate);
             const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-
             doc.text(`Date: ${formattedDate}`, 20, 60);
-
-            // Add customer details
+    
+            // Customer Details
             doc.setFontSize(12);
             doc.text('Customer Details', 20, 70);
             doc.setFontSize(10);
-
-            const customerDetails = [];
-            customerDetails.push(`Name: ${invoiceData.userName || 'N/A'}`);
-            customerDetails.push(`Email: ${invoiceData.userEmail || 'N/A'}`);
-
+            const customerDetails = [
+                `Name: ${invoiceData.userName || 'N/A'}`,
+                `Email: ${invoiceData.userEmail || 'N/A'}`,
+                `Phone: ${invoiceData.userPhone || 'N/A'}`,
+                `Address: ${invoiceData.userLocation || 'N/A'}`,
+            ];
             let customerY = 77;
-            customerDetails.forEach((detail) => {
+            customerDetails.forEach(detail => {
                 doc.text(detail, 20, customerY);
                 customerY += 5;
             });
-
-            // Add salesperson details
-            doc.setFontSize(12);
-            doc.text('Salesperson Details', 120, 70);
-            doc.setFontSize(10);
-            
-            const salespersonData = salesperson as any;
-            if (salespersonData) {
-                doc.text(`Name: ${salespersonData.name || 'N/A'}`, 120, 77);
-                doc.text(`Email: ${salespersonData.email || 'N/A'}`, 120, 82);
-            }
-
-            // Create items table data
-            const items = [
-                {
-                    description: invoiceData.description,
-                    stock_code: invoiceData.stock_code,
-                    price: invoiceData.price || invoiceData.total,
-                    quantity: invoiceData.quantity || 1,
-                    total: invoiceData.total
-                }
-            ];
-
-            // Create the table
+    
+            // // Salesperson Details
+            // doc.setFontSize(12);
+            // doc.text('Salesperson Details', 120, 70);
+            // doc.setFontSize(10);
+    
+            // const salespersonData = invoiceData.salesperson || {};
+            // doc.text(`Name: ${salespersonData.name || 'N/A'}`, 120, 77);
+            // doc.text(`Email: ${salespersonData.email || 'N/A'}`, 120, 82);
+    
+            // Table Data
+            const items = [{
+                description: invoiceData.description,
+                stock_code: invoiceData.stock_code,
+                price: Number(invoiceData.price || invoiceData.total) || 0,
+                quantity: Number(invoiceData.quantity || 1),
+                total: Number(invoiceData.total) || 0
+            }];
+    
+            // Items Table
             autoTable(doc, {
                 startY: 95,
                 head: [['Item', 'Stock Code', 'Price', 'Quantity', 'Total']],
                 body: items.map(item => [
                     item.description || 'Unnamed Item',
                     item.stock_code || 'N/A',
-                    formatCurrency(item.price),
+                    item.price.toFixed(2),
                     item.quantity,
-                    formatCurrency(item.total)
+                    item.total.toFixed(2)
                 ]),
-                theme: 'striped',
+                theme: 'plain',
                 headStyles: {
-                    fillColor: [41, 128, 185],
-                    textColor: 255,
-                    fontStyle: 'bold'
+                    fillColor: [240, 240, 240],
+                    textColor: [0, 0, 0],
+                    fontStyle: 'bold',
+                    fontSize: 7
                 },
-                margin: { top: 10 }
+                styles: { fontSize: 7 },
+                columnStyles: {
+                    0: { cellWidth: 60 },  // Item
+                    1: { cellWidth: 30, halign: 'center' }, // Stock Code
+                    2: { cellWidth: 25, halign: 'right' }, // Price
+                    3: { cellWidth: 25, halign: 'center' }, // Quantity
+                    4: { cellWidth: 30, halign: 'right' }  // Total
+                },
+                margin: { left: 5, right: 5 }
             });
-
-            // Current position after the table
+    
             const finalY = (doc as any).lastAutoTable.finalY + 10;
-
-            // Add totals
+    
+            // Totals
             let yPos = finalY;
             const totalsX = 130;
             const valuesX = 190;
-
-            // Final total
+    
+            const totalValue = Number(invoiceData.total) || 0;
+            const tax = Number(invoiceData.tax || 0);
+            const discount = Number(invoiceData.discount || 0);
+            const taxAmount = (totalValue * tax) / 100;
+            const discountAmount = (totalValue * discount) / 100;
+            const finalTotal = totalValue + taxAmount - discountAmount;
+    
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+    
+            // Subtotal
+            doc.text('Subtotal:', totalsX, yPos, { align: 'right' });
+            doc.text(`$${totalValue.toFixed(2)}`, valuesX, yPos, { align: 'right' });
+            yPos += 6;
+    
+            // Tax
+            doc.text(`Tax (${tax}%):`, totalsX, yPos, { align: 'right' });
+            doc.text(`$${taxAmount.toFixed(2)}`, valuesX, yPos, { align: 'right' });
+            yPos += 6;
+    
+            // Discount
+            doc.text(`Discount (${discount}%):`, totalsX, yPos, { align: 'right' });
+            doc.text(`-$${discountAmount.toFixed(2)}`, valuesX, yPos, { align: 'right' });
+            yPos += 6;
+    
+            // Line
+            doc.setLineWidth(0.5);
+            doc.line(totalsX - 20, yPos, valuesX + 10, yPos);
+            yPos += 5;
+    
+            // Final Total
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.text('Total:', totalsX, yPos, { align: 'right' });
-            doc.text(formatCurrency(invoiceData.total), valuesX, yPos, { align: 'right' });
-            doc.setFont('helvetica', 'normal');
-
-            // Add payment information and terms
+            doc.text(`$${finalTotal.toFixed(2)}`, valuesX, yPos, { align: 'right' });
+    
+            // Additional Info
             yPos += 15;
+            doc.setFont('helvetica', 'normal');
             doc.setFontSize(10);
-            doc.text('Payment Information', 20, yPos);
-            yPos += 6;
-            doc.text('Please make payment within 30 days.', 20, yPos);
-            yPos += 6;
-            doc.text('Thank you for your business!', 20, yPos);
-
-            // Save the PDF
+    
+            if (invoiceData.goldRate) {
+                doc.text(`Gold Rate: $${invoiceData.goldRate.toFixed(2)}/oz`, 20, yPos);
+                yPos += 6;
+            }
+    
+            // Save
             doc.save(`Invoice_${invoiceData.invoiceNumber}.pdf`);
-            
+    
             return true;
         } catch (error) {
             console.error('Error generating PDF:', error);
@@ -246,11 +280,14 @@ const SoldProducts = () => {
             setGeneratingPdf(false);
         }
     };
+    
 
     // Handle download invoice
     const handleDownloadInvoice = async (invoiceData: any) => {
         await generateInvoicePDF(invoiceData);
     };
+
+    console.log(recordsData,'this is the record data')
 
     return (
         <div>

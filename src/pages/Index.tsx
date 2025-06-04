@@ -1,23 +1,33 @@
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { IRootState } from '../store';
+import { useDispatch } from 'react-redux';
 import { setPageTitle } from '../store/themeConfigSlice';
 import IconX from '../components/Icon/IconX';
 import axios from 'axios';
 import useMarketData from './hooks/userMarketData';
 import ReactApexChart from 'react-apexcharts';
-import { ApexOptions } from 'apexcharts'; // Add this import
+import { ApexOptions } from 'apexcharts';
 import { useNavigate } from 'react-router-dom';
+import IconHorizontalDots from '../components/Icon/IconHorizontalDots';
+import Dropdown from '../components/Dropdown';
+import { 
+  FiInfo, 
+  FiAlertCircle, 
+  FiCheck, 
+  FiAlertTriangle,
+  FiUser,
+  FiEdit,
+  FiTrash2,
+  FiRefreshCw
+} from 'react-icons/fi';
 
 interface SeriesData {
     name: string;
     data: number[];
 }
   
-// Update this interface to use ApexOptions
 interface ChartState {
     series: SeriesData[];
-    options: ApexOptions; // Changed from ChartOptions to ApexOptions
+    options: ApexOptions;
 }
 
 interface MarketData {
@@ -30,31 +40,53 @@ interface MarketData {
     symbol: string;
     marketOpenTimestamp: string | number | null; 
     nextMarketOpen: string | number | null; 
-    // Add other expected properties if needed
+}
+
+interface Log {
+    _id?: string;
+    type: string;
+    message: string;
+    target?: string;
+    targetHighlight?: string;
+    createdAt: string;
 }
   
 const Index = () => {
     const dispatch = useDispatch();
     useEffect(() => {
         dispatch(setPageTitle('Sales Admin'));
-    });
-const navigate = useNavigate();
+    }, [dispatch]);
+
+    const navigate = useNavigate();
     const token = localStorage.getItem('authToken');
-const userRole = localStorage.getItem('userRole');
+    const userRole = localStorage.getItem('userRole');
+
+    // Log type configuration
+    const logTypeConfig = {
+        info: { icon: FiInfo, bgColor: 'bg-blue-500' },
+        error: { icon: FiAlertCircle, bgColor: 'bg-red-500' },
+        success: { icon: FiCheck, bgColor: 'bg-green-500' },
+        warning: { icon: FiAlertTriangle, bgColor: 'bg-amber-500' },
+        user: { icon: FiUser, bgColor: 'bg-purple-500' },
+        edit: { icon: FiEdit, bgColor: 'bg-cyan-500' },
+        delete: { icon: FiTrash2, bgColor: 'bg-pink-500' },
+        update: { icon: FiRefreshCw, bgColor: 'bg-indigo-500' },
+        default: { icon: FiInfo, bgColor: 'bg-gray-500' }
+    };
 
     useEffect(() => {
         if (!token || userRole !== 'admin') {
             navigate('/auth/cover-login');
             return;
         }
-        
-    }, [navigate]);
+    }, [navigate, token, userRole]);
 
     const [loading, setLoading] = useState(false);
     const [goldRate, setGoldRate] = useState<number | null>(null);
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [timeAgo, setTimeAgo] = useState<string>('');
     const [newRate, setNewRate] = useState<string>('');
+    const [logs, setLogs] = useState<Log[]>([]); // Set proper initial state
     const [updateMessage, setUpdateMessage] = useState<string>('');
     const [updateStatus, setUpdateStatus] = useState<'success' | 'error' | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -67,7 +99,7 @@ const userRole = localStorage.getItem('userRole');
         ],
         options: {
           chart: {
-            type: 'line' as const, // Fix: use 'as const' to ensure correct typing
+            type: 'line' as const,
             height: 350,
           },
           xaxis: {
@@ -75,7 +107,7 @@ const userRole = localStorage.getItem('userRole');
           },
           title: {
             text: 'Market Data',
-            align: 'left' as const, // Fix: use 'as const' for align property
+            align: 'left' as const,
           },
         },
       });
@@ -113,17 +145,48 @@ const userRole = localStorage.getItem('userRole');
 
     // Function to format date in a readable format
     const formatDate = (dateString: string) => {
-        const options: Intl.DateTimeFormatOptions = { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        };
-        return new Date(dateString).toLocaleString(undefined, options);
+        if (!dateString) return 'Unknown date';
+        
+        try {
+            const options: Intl.DateTimeFormatOptions = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            return new Date(dateString).toLocaleString(undefined, options);
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return 'Invalid date';
+        }
     };
 
-    // Function to fetch gold rate from backend (fallback if websocket is not available)
+    // Function to fetch logs
+    useEffect(() => {
+        const fetchLogs = async () => {
+            try {
+                setLoading(true);
+                const response = await axios.get(`${backendUrl}/admin/get-logs`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                
+            
+                setLogs(response.data.data || []); // Ensure logs is always an array
+                console.log('Logs Data:', response.data.data);
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchLogs();
+    }, [backendUrl, token]);
+
+    // console.log('logs:', logs);
+   
     const fetchGoldRate = async () => {
         try {
             setLoading(true);
@@ -194,7 +257,7 @@ const userRole = localStorage.getItem('userRole');
         if (!marketData) {
             fetchGoldRate();
         }
-    }, []);
+    }, [marketData]);
 
     // Only update timestamp when market data changes, not the rate itself
     useEffect(() => {
@@ -238,7 +301,6 @@ const userRole = localStorage.getItem('userRole');
                         ],
                     },
                 }
-                
             }));
         }
     }, [marketData]);
@@ -291,14 +353,11 @@ const userRole = localStorage.getItem('userRole');
                             {marketData && (
                                 <div className="bg-white dark:bg-gray-900 rounded-md overflow-hidden mb-4">
                                     <div className="grid grid-cols-2 gap-4 p-4">
-                                       
                                         <div className="flex flex-col">
                                             <span className="text-xs text-gray-500 dark:text-gray-400">Offer</span>
                                             <span className="font-medium">${marketData.offer?.toFixed(2) || '-'}</span>
                                         </div>
-                                      
                                     </div>
-                                  
                                 </div>
                             )}
                             
@@ -376,28 +435,71 @@ const userRole = localStorage.getItem('userRole');
                         
                     </div>
                     <div>
-            <div >
-                <div >
-                    <div className="panel h-full">
-                        <h5 className="font-semibold text-lg dark:text-white-light">Gold Market Data</h5>
-                        {marketData && (
-                            <div className="mt-4">
-                                <ReactApexChart
-                                    options={chartData.options}
-                                    series={chartData.series}
-                                    type="line"
-                                    height={350}
-                                />
+                        <div>
+                            <div>
+                                <div className="panel h-full">
+                                    <h5 className="font-semibold text-lg dark:text-white-light">Gold Market Data</h5>
+                                    {marketData && (
+                                        <div className="mt-4">
+                                            <ReactApexChart
+                                                options={chartData.options}
+                                                series={chartData.series}
+                                                type="line"
+                                                height={350}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
+                    <div className="panel h-full">
+                        <div className="flex items-start justify-between dark:text-white-light mb-5 -mx-5 p-5 pt-0 border-b border-white-light dark:border-[#1b2e4b]">
+                            <h5 className="font-semibold text-lg">Activity Log</h5>
+                            <div className="dropdown">
+                               
+                            </div>
+                        </div>
+                        <div className="space-y-7">
+                        {loading ? (
+    <div className="flex justify-center p-4">
+        <div className="animate-spin border-2 border-primary border-l-transparent rounded-full w-full inline-flex"></div>
+    </div>
+) : logs && logs.length > 0 ? (
+    logs.map((log, index) => {
+        // Use a default type since we don't have a type property
+        const logType = 'default';
+        const logConfig = logTypeConfig[logType] || logTypeConfig.default;
+        const IconComponent = logConfig.icon;
+        const isLast = index === logs.length - 1;
+        
+        return (
+            <div className="flex" key={log._id || index}>
+                <div className="shrink-0 ltr:mr-2 rtl:ml-2 relative z-10">
+                    {!isLast && (
+                        <div className="before:w-[2px] before:h-[calc(100%-24px)] before:bg-white-dark/30 before:absolute before:top-10 before:left-4" />
+                    )}
+                    <div className={`${logConfig.bgColor} shadow w-8 h-8 rounded-full flex items-center justify-center text-white`}>
+                        <IconComponent />
+                    </div>
                 </div>
-                
+                <div>
+                    <h5 className="font-semibold dark:text-white-light">
+                        {/* Use log.log instead of log.message */}
+                        {(log as any)?.log}
+                    </h5>
+                    <p className="text-white-dark text-xs">{formatDate(log.createdAt)}</p>
+                </div>
             </div>
-           
+        );
+    })
+) : (
+    <p className="text-gray-500 dark:text-gray-400">No logs available.</p>
+)}
+                        </div>
+                    </div>
+            </div>
         </div>
     );
 };
