@@ -5,10 +5,10 @@ const SOCKET_SERVER_URL = "https://capital-server-gnsu.onrender.com";
 const SECRET_KEY = "aurify@123";
 
 export default function useMarketData(symbols = ["GOLD"]) {
-  const [marketData, setMarketData] = useState(null);
-  const socketRef = useRef(null);
+  const [marketData, setMarketData] = useState<any>(null);
+  const socketRef = useRef<any>(null);
 
-  const handleMarketData = useCallback((data) => {
+  const handleMarketData = useCallback((data: any) => {
     if (data?.symbol?.toLowerCase() === "gold") {
       setMarketData(data);
     }
@@ -32,7 +32,7 @@ export default function useMarketData(symbols = ["GOLD"]) {
     });
 
     socket.on("market-data", handleMarketData);
-    socket.on("error", (error) => console.error("❌ WebSocket error:", error));
+    socket.on("error", (error: any) => console.error("❌ WebSocket error:", error));
 
     return () => {
       console.log("🔌 Disconnecting WebSocket...");
