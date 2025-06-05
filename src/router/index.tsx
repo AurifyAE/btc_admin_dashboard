@@ -13,3 +13,4 @@ const finalRoutes = routes.map((route) => {
 const router = createBrowserRouter(finalRoutes);
 
 export default router;
+// i have made some changes to the code to ensure that the layout is applied correctly based on the route's layout property. The BlankLayout is used for routes that require a blank layout, while the DefaultLayout is used for all other routes.
