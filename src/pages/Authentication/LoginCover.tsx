@@ -60,6 +60,8 @@ const UnifiedLoginCover = () => {
 
     const submitAdminLogin = async () => {
         try {
+            console.log('Submitting admin login with:', { username, password });
+            console.log('Backend URL:', backendUrl);
             const response = await axios.post(`${backendUrl}/admin/admin-login`, {
                 username: username.trim(),
                 password: password.trim(),
