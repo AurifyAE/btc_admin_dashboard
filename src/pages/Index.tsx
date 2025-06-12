@@ -8,7 +8,7 @@ import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import { useNavigate } from 'react-router-dom';
 import SalesDashboard from './SalesDashboard';
-import Logs from './logs';
+import Logs from './Logs';
 import IconHorizontalDots from '../components/Icon/IconHorizontalDots';
 import Dropdown from '../components/Dropdown';
 import { FiInfo, FiAlertCircle, FiCheck, FiAlertTriangle, FiUser, FiEdit, FiTrash2, FiRefreshCw } from 'react-icons/fi';
