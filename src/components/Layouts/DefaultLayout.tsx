@@ -45,6 +45,8 @@ const DefaultLayout = ({ children }: PropsWithChildren) => {
         };
     }, []);
 
+    console.log(themeConfig.sidebar, 'this is DefaultLayout.tsx sidebar state');
+
     return (
         <App>
             {/* BEGIN MAIN CONTAINER */}

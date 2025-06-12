@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, useLocation } from 'react-router-dom';
 import { toggleSidebar } from '../../store/themeConfigSlice';
+import { setSidebarClosed } from '../../store/themeConfigSlice'; // adjust import if needed
+
 import AnimateHeight from 'react-animate-height';
 import { IRootState } from '../../store';
 import { useState, useEffect } from 'react';
@@ -46,6 +48,7 @@ import IconFolder from '../Icon/IconFolder';
 import IconLogout from '../Icon/IconLogout';
 import Swal from 'sweetalert2';
 import IconHome from '../Icon/IconHome';
+import { ArrowRightToLine, CheckCircle, CreditCard, LayoutDashboard, MapPin, Package, RotateCcw, ShoppingBag, ShoppingCart, TruckIcon, User, UserCog, Users } from 'lucide-react';
 
 const Sidebar = () => {
     const [currentMenu, setCurrentMenu] = useState<string>('');
@@ -78,14 +81,19 @@ const Sidebar = () => {
         }
     }, []);
 
-    useEffect(() => {
-        if (window.innerWidth < 1024 && themeConfig.sidebar) {
+
+
+    const userRole = localStorage.getItem('userRole'); // or useSelector(...) if from Redux
+// useEffect(() => {
+//     dispatch(setSidebarClosed());
+// }, [dispatch]);
+
+ useEffect(() => {
+        if (themeConfig.sidebar) {
             dispatch(toggleSidebar());
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location]);
-    const userRole = localStorage.getItem('userRole'); // or useSelector(...) if from Redux
-
 
     const handleLogout = () => {
         Swal.fire({
@@ -132,11 +140,10 @@ const Sidebar = () => {
                 timer: 3000,
             });
         };
+     
     return (
         <div className={semidark ? 'dark' : ''}>
-            <nav
-                className={`sidebar fixed min-h-screen h-full top-0 bottom-0 w-[260px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] z-50 transition-all duration-300 ${semidark ? 'text-white-dark' : ''}`}
-            >
+            <nav className={`sidebar fixed min-h-screen h-full top-0 bottom-0 w-[260px] shadow-[5px_0_25px_0_rgba(94,92,154,0.1)] z-50 transition-all duration-300 ${semidark ? 'text-white-dark' : ''}`}>
                 <div className="bg-white dark:bg-black h-full">
                     <div className="flex justify-between items-center px-4 py-3">
                         <NavLink to="/" className="main-logo flex items-center shrink-0">
@@ -159,7 +166,7 @@ const Sidebar = () => {
                                     <li className="nav-item">
                                         <NavLink to="/" className="group">
                                             <div className="flex items-center">
-                                                <IconHome className="group-hover:!text-primary shrink-0" />
+                                                <LayoutDashboard  className="group-hover:!text-primary shrink-0" />
                                                 <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Dashboard')}</span>
                                             </div>
                                         </NavLink>
@@ -167,7 +174,7 @@ const Sidebar = () => {
                                     <li className="nav-item">
                                         <NavLink to="/products" className="group">
                                             <div className="flex items-center">
-                                                <IconBox className="group-hover:!text-primary shrink-0" />
+                                                <Package className="group-hover:!text-primary shrink-0" />
                                                 <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Products')}</span>
                                             </div>
                                         </NavLink>
@@ -175,7 +182,7 @@ const Sidebar = () => {
                                     <li className="nav-item">
                                         <NavLink to="/admincart" className="group">
                                             <div className="flex items-center">
-                                                <IconInbox className="group-hover:!text-primary shrink-0" />
+                                                <ShoppingCart className="group-hover:!text-primary shrink-0" />
                                                 <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Admin Cart')}</span>
                                             </div>
                                         </NavLink>
@@ -183,7 +190,7 @@ const Sidebar = () => {
                                     <li className="nav-item">
                                         <NavLink to="/returncartofadmin" className="group">
                                             <div className="flex items-center">
-                                                <IconFolder className="group-hover:!text-primary shrink-0" />
+                                                <RotateCcw className="group-hover:!text-primary shrink-0" />
                                                 <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Return Cart')}</span>
                                             </div>
                                         </NavLink>
@@ -191,7 +198,7 @@ const Sidebar = () => {
                                     <li className="nav-item">
                                         <NavLink to="/locations" className="group">
                                             <div className="flex items-center">
-                                                <IconMapPin className="group-hover:!text-primary shrink-0" />
+                                                <MapPin className="group-hover:!text-primary shrink-0" />
                                                 <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Locations')}</span>
                                             </div>
                                         </NavLink>
@@ -199,7 +206,7 @@ const Sidebar = () => {
                                     <li className="nav-item">
                                         <NavLink to="/salespersons" className="group">
                                             <div className="flex items-center">
-                                                <IconUsers className="group-hover:!text-primary shrink-0" />
+                                                <Users className="group-hover:!text-primary shrink-0" />
                                                 <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Sales Persons')}</span>
                                             </div>
                                         </NavLink>
@@ -207,7 +214,7 @@ const Sidebar = () => {
                                     <li className="nav-item">
                                         <NavLink to="/transaction" className="group">
                                             <div className="flex items-center">
-                                                <IconArrowForward className="group-hover:!text-primary shrink-0" />
+                                                < ArrowRightToLine className="group-hover:!text-primary shrink-0" />
                                                 <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Transaction')}</span>
                                             </div>
                                         </NavLink>
@@ -216,10 +223,18 @@ const Sidebar = () => {
                             )}
                             {userRole === 'salesperson' && (
                                 <>
+                                  <li className="nav-item">
+                                    <NavLink to="/spprofile" className="group">
+                                        <div className="flex items-center">
+                                            <User className="group-hover:!text-primary shrink-0" />
+                                            <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Profile')}</span>
+                                        </div>
+                                    </NavLink>
+                                </li>
                                 <li className="nav-item">
                                     <NavLink to="/incomingproducts" className="group">
                                         <div className="flex items-center">
-                                            <IconInbox className="group-hover:!text-primary shrink-0" />
+                                            <TruckIcon className="group-hover:!text-primary shrink-0" />
                                             <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Incoming Products')}</span>
                                         </div>
                                     </NavLink>
@@ -227,23 +242,15 @@ const Sidebar = () => {
                                 <li className="nav-item">
                                     <NavLink to="/productinhand" className="group">
                                         <div className="flex items-center">
-                                            <IconShoppingCart className="group-hover:!text-primary shrink-0" />
+                                            <Package className="group-hover:!text-primary shrink-0" />
                                             <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Products In Hand')}</span>
-                                        </div>
-                                    </NavLink>
-                                </li>
-                                <li className="nav-item">
-                                    <NavLink to="/spprofile" className="group">
-                                        <div className="flex items-center">
-                                            <IconUser className="group-hover:!text-primary shrink-0" />
-                                            <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Profile')}</span>
                                         </div>
                                     </NavLink>
                                 </li>
                                 <li className="nav-item">
                                     <NavLink to="/returncart" className="group">
                                         <div className="flex items-center">
-                                            <IconArrowBackward className="group-hover:!text-primary shrink-0" />
+                                            <RotateCcw className="group-hover:!text-primary shrink-0" />
                                             <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Return Cart')}</span>
                                         </div>
                                     </NavLink>
@@ -251,7 +258,7 @@ const Sidebar = () => {
                                 <li className="nav-item">
                                     <NavLink to="/soldpageofsalesperson" className="group">
                                         <div className="flex items-center">
-                                            <IconArrowBackward className="group-hover:!text-primary shrink-0" />
+                                            <CheckCircle className="group-hover:!text-primary shrink-0" />
                                             <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Sold')}</span>
                                         </div>
                                     </NavLink>
@@ -260,7 +267,7 @@ const Sidebar = () => {
                                 <li className="nav-item">
                                     <NavLink to="/sellproduct" className="group">
                                         <div className="flex items-center">
-                                            <IconArrowLeft className="group-hover:!text-primary shrink-0" />
+                                            <ShoppingBag className="group-hover:!text-primary shrink-0" />
                                             <span className="ltr:pl-3 rtl:pr-3 text-black dark:text-[#506690] dark:group-hover:text-white-dark">{t('Sell')}</span>
                                         </div>
                                     </NavLink>
@@ -268,7 +275,7 @@ const Sidebar = () => {
                                 </>
                             )}
 
-                            <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1 mt-10">
+                            <h2 className="py-3 px-7 flex items-center uppercase font-extrabold bg-white-light/30 dark:bg-dark dark:bg-opacity-[0.08] -mx-4 mb-1 mt-10 " style={{position:'fixed', bottom:'0', width:'17%'}}>
                             <div className="dropdown shrink-0 w-full">
                             <button type="button" className="btn btn-danger w-full" onClick={handleLogout}>
                                 <IconLogout className="mr-4" />

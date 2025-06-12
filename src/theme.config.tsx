@@ -3,10 +3,11 @@ const themeConfig = {
     theme: 'light', // light, dark, system
     menu: 'vertical', // vertical, collapsible-vertical, horizontal
     layout: 'full', // full, boxed-layout
-    rtlClass: 'ltr', // rtl, ltr
+    rtlClass: 'ltr',
+    sidebar: true, // rtl, ltr
     animation: '', // animate__fadeIn, animate__fadeInDown, animate__fadeInUp, animate__fadeInLeft, animate__fadeInRight, animate__slideInDown, animate__slideInLeft, animate__slideInRight, animate__zoomIn
     navbar: 'navbar-sticky', // navbar-sticky, navbar-floating, navbar-static
-    semidark: false
+    semidark: false // true, false
 };
 
 export default themeConfig;

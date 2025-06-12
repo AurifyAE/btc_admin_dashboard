@@ -94,7 +94,6 @@ const Products = () => {
         { accessor: 'pureWeight', title: 'Pure Weight (g)' },
         { accessor: 'makingRate', title: 'Making Rate (%)' },
         { accessor: 'makingAmount', title: 'Making Charges (₹)' },
-        { accessor: 'netAmount', title: 'Net Amount (₹)' },
         { accessor: 'barcode', title: 'Barcode' }
     ]}
     totalRecords={products.length}

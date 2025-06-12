@@ -7,24 +7,17 @@ import useMarketData from './hooks/userMarketData';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import { useNavigate } from 'react-router-dom';
+import SalesDashboard from './SalesDashboard';
+import Logs from './logs';
 import IconHorizontalDots from '../components/Icon/IconHorizontalDots';
 import Dropdown from '../components/Dropdown';
-import { 
-  FiInfo, 
-  FiAlertCircle, 
-  FiCheck, 
-  FiAlertTriangle,
-  FiUser,
-  FiEdit,
-  FiTrash2,
-  FiRefreshCw
-} from 'react-icons/fi';
+import { FiInfo, FiAlertCircle, FiCheck, FiAlertTriangle, FiUser, FiEdit, FiTrash2, FiRefreshCw } from 'react-icons/fi';
 
 interface SeriesData {
     name: string;
     data: number[];
 }
-  
+
 interface ChartState {
     series: SeriesData[];
     options: ApexOptions;
@@ -38,8 +31,8 @@ interface MarketData {
     bid: number;
     epic: string;
     symbol: string;
-    marketOpenTimestamp: string | number | null; 
-    nextMarketOpen: string | number | null; 
+    marketOpenTimestamp: string | number | null;
+    nextMarketOpen: string | number | null;
 }
 
 interface Log {
@@ -50,7 +43,7 @@ interface Log {
     targetHighlight?: string;
     createdAt: string;
 }
-  
+
 const Index = () => {
     const dispatch = useDispatch();
     useEffect(() => {
@@ -62,17 +55,7 @@ const Index = () => {
     const userRole = localStorage.getItem('userRole');
 
     // Log type configuration
-    const logTypeConfig = {
-        info: { icon: FiInfo, bgColor: 'bg-blue-500' },
-        error: { icon: FiAlertCircle, bgColor: 'bg-red-500' },
-        success: { icon: FiCheck, bgColor: 'bg-green-500' },
-        warning: { icon: FiAlertTriangle, bgColor: 'bg-amber-500' },
-        user: { icon: FiUser, bgColor: 'bg-purple-500' },
-        edit: { icon: FiEdit, bgColor: 'bg-cyan-500' },
-        delete: { icon: FiTrash2, bgColor: 'bg-pink-500' },
-        update: { icon: FiRefreshCw, bgColor: 'bg-indigo-500' },
-        default: { icon: FiInfo, bgColor: 'bg-gray-500' }
-    };
+    
 
     useEffect(() => {
         if (!token || userRole !== 'admin') {
@@ -86,37 +69,105 @@ const Index = () => {
     const [lastUpdated, setLastUpdated] = useState<string | null>(null);
     const [timeAgo, setTimeAgo] = useState<string>('');
     const [newRate, setNewRate] = useState<string>('');
-    const [logs, setLogs] = useState<Log[]>([]); // Set proper initial state
+   
     const [updateMessage, setUpdateMessage] = useState<string>('');
     const [updateStatus, setUpdateStatus] = useState<'success' | 'error' | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [chartData, setChartData] = useState<ChartState>({
+    // const [chartData, setChartData] = useState<ChartState>({
+    //     series: [
+    //         {
+    //             name: 'Offer',
+    //             data: [],
+    //         },
+    //     ],
+    //     options: {
+    //         chart: {
+    //             type: 'line' as const,
+    //             height: 350,
+    //         },
+    //         xaxis: {
+    //             categories: [],
+    //         },
+    //         title: {
+    //             text: 'Market Data',
+    //             align: 'left' as const,
+    //         },
+    //     },
+    // });
+
+    // Add these variables (you might need to get these from your theme context)
+    const isDark = false; // Replace with your actual dark theme state
+    const isRtl = false; // Replace with your actual RTL state
+
+    // Replace your existing chartData state with this styled configuration
+    const [lineChart, setLineChart] = useState<any>({
         series: [
-          {
-            name: 'Offer',
-            data: [],
-          },
+            {
+                name: 'Gold Price',
+                data: [],
+            },
         ],
         options: {
-          chart: {
-            type: 'line' as const,
-            height: 350,
-          },
-          xaxis: {
-            categories: [],
-          },
-          title: {
-            text: 'Market Data',
-            align: 'left' as const,
-          },
+            chart: {
+                height: 300,
+                type: 'line',
+                toolbar: false,
+            },
+            colors: ['#4361EE'],
+            tooltip: {
+                marker: false,
+                y: {
+                    formatter(number: number) {
+                        return '$' + number;
+                    },
+                },
+            },
+            stroke: {
+                width: 2,
+                curve: 'smooth',
+            },
+            xaxis: {
+                categories: [],
+                axisBorder: {
+                    color: isDark ? '#191e3a' : '#e0e6ed',
+                },
+            },
+            yaxis: {
+                opposite: isRtl ? true : false,
+                labels: {
+                    offsetX: isRtl ? -20 : 0,
+                },
+            },
+            grid: {
+                borderColor: isDark ? '#191e3a' : '#e0e6ed',
+            },
         },
-      });
-    
+    });
+
     // Using the WebSocket hook to get real-time market data
     const { marketData } = useMarketData(['GOLD']) as { marketData: MarketData | null };
 
     const backendUrl = import.meta.env.VITE_API_URL;
 
+     // Function to format date in a readable format
+    const formatDate = (dateString: string) => {
+        if (!dateString) return 'Unknown date';
+
+        try {
+            const options: Intl.DateTimeFormatOptions = {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            };
+            return new Date(dateString).toLocaleString(undefined, options);
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return 'Invalid date';
+        }
+    };
+    
     // Function to calculate time difference
     const calculateTimeAgo = (updatedAt: string) => {
         const now = new Date();
@@ -143,50 +194,12 @@ const Index = () => {
         }
     };
 
-    // Function to format date in a readable format
-    const formatDate = (dateString: string) => {
-        if (!dateString) return 'Unknown date';
-        
-        try {
-            const options: Intl.DateTimeFormatOptions = { 
-                year: 'numeric', 
-                month: 'short', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            };
-            return new Date(dateString).toLocaleString(undefined, options);
-        } catch (error) {
-            console.error('Error formatting date:', error);
-            return 'Invalid date';
-        }
-    };
+   
 
-    // Function to fetch logs
-    useEffect(() => {
-        const fetchLogs = async () => {
-            try {
-                setLoading(true);
-                const response = await axios.get(`${backendUrl}/admin/get-logs`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                
-            
-                setLogs(response.data.data || []); // Ensure logs is always an array
-                console.log('Logs Data:', response.data.data);
-            } catch (error) {
-                console.error('Error fetching logs:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchLogs();
-    }, [backendUrl, token]);
+    
 
     // console.log('logs:', logs);
-   
+
     const fetchGoldRate = async () => {
         try {
             setLoading(true);
@@ -195,12 +208,12 @@ const Index = () => {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            
+
             // Store rate and updated time information
             setGoldRate(response.data.rate);
             setLastUpdated(response.data.updatedAt);
             setTimeAgo(calculateTimeAgo(response.data.updatedAt));
-            
+
             console.log('Gold Rate Data:', response.data);
         } catch (error) {
             console.error('Error fetching gold rate:', error);
@@ -211,7 +224,7 @@ const Index = () => {
 
     const handleUpdateRate = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!newRate || isNaN(parseFloat(newRate))) {
             setUpdateMessage('Please enter a valid rate');
             setUpdateStatus('error');
@@ -229,20 +242,19 @@ const Index = () => {
                     },
                 }
             );
-            
+
             // Update the displayed rate after successful update
             setGoldRate(response.data.rate);
             setLastUpdated(response.data.updatedAt);
             setTimeAgo(calculateTimeAgo(response.data.updatedAt));
-            
+
             setUpdateMessage('Rate updated successfully');
             setUpdateStatus('success');
-            
+
             // Close modal after a brief delay
             setTimeout(() => {
                 closeModal();
             }, 1500);
-            
         } catch (error) {
             console.error('Error updating gold rate:', error);
             setUpdateMessage('Failed to update rate');
@@ -266,7 +278,7 @@ const Index = () => {
             // Note: Not updating goldRate here, as it will be edited manually
         }
     }, [marketData]);
-    
+
     const openModal = () => {
         // Set the initial value in the modal to the current rate if available
         if (goldRate !== null) {
@@ -283,24 +295,21 @@ const Index = () => {
 
     useEffect(() => {
         if (marketData) {
-            setChartData((prev) => ({
+            setLineChart((prev: any) => ({
                 ...prev,
                 series: [
                     {
-                        name: 'Offer',
+                        name: 'Gold Price',
                         data: [...prev.series[0].data, marketData.offer],
                     },
                 ],
                 options: {
                     ...prev.options,
                     xaxis: {
-                        ...(prev.options.xaxis ?? {}),
-                        categories: [
-                            ...(prev.options.xaxis?.categories ?? []),
-                            new Date().toLocaleTimeString(),
-                        ],
+                        ...prev.options.xaxis,
+                        categories: [...(prev.options.xaxis?.categories ?? []), new Date().toLocaleTimeString()],
                     },
-                }
+                },
             }));
         }
     }, [marketData]);
@@ -312,7 +321,7 @@ const Index = () => {
                     <div className="panel h-full">
                         <div className="flex items-center justify-between mb-5">
                             <h5 className="font-semibold text-lg dark:text-white-light">Gold Market Data</h5>
-                            
+
                             {/* Real-time indicator */}
                             {marketData && (
                                 <div className="flex items-center gap-2">
@@ -323,7 +332,7 @@ const Index = () => {
                                 </div>
                             )}
                         </div>
-                        
+
                         {/* Comprehensive market data display */}
                         <div className="flex flex-col">
                             {/* Primary data */}
@@ -331,20 +340,11 @@ const Index = () => {
                                 <div>
                                     <p className="text-sm text-gray-500 dark:text-gray-400">Current Rate</p>
                                     <p className="text-2xl font-semibold mt-1">
-                                        {goldRate !== null ? (
-                                            <span className="text-primary">${goldRate.toFixed(2)}</span>
-                                        ) : (
-                                            <span className="text-gray-400">Loading...</span>
-                                        )}
+                                        {goldRate !== null ? <span className="text-primary">${goldRate.toFixed(2)}</span> : <span className="text-gray-400">Loading...</span>}
                                     </p>
                                 </div>
-                                
-                                <button 
-                                    type="button" 
-                                    className="btn btn-primary"
-                                    onClick={openModal}
-                                    disabled={loading}
-                                >
+
+                                <button type="button" className="btn btn-primary" onClick={openModal} disabled={loading}>
                                     Update Rate
                                 </button>
                             </div>
@@ -360,7 +360,7 @@ const Index = () => {
                                     </div>
                                 </div>
                             )}
-                            
+
                             {/* Last updated info */}
                             <div>
                                 {lastUpdated && (
@@ -371,7 +371,7 @@ const Index = () => {
                                 )}
                             </div>
                         </div>
-                        
+
                         {/* Modal for updating rate */}
                         {isModalOpen && (
                             <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center px-4">
@@ -382,57 +382,47 @@ const Index = () => {
                                             <IconX />
                                         </button>
                                     </div>
-                                    
+
                                     <form onSubmit={handleUpdateRate} className="p-4">
                                         <div className="mb-4">
                                             <label htmlFor="rate" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                 New Rate
                                             </label>
-                                            <input 
+                                            <input
                                                 id="rate"
-                                                type="number" 
-                                                placeholder="Enter new rate" 
-                                                className="form-input w-full" 
+                                                type="number"
+                                                placeholder="Enter new rate"
+                                                className="form-input w-full"
                                                 value={newRate}
                                                 onChange={(e) => setNewRate(e.target.value)}
                                                 step="0.01"
                                                 min="0"
                                             />
                                         </div>
-                                        
+
                                         {updateMessage && (
-                                            <div className={`text-sm p-2 rounded mb-4 ${updateStatus === 'success' ? 'bg-success/20 text-success' : 'bg-danger/20 text-danger'}`}>
-                                                {updateMessage}
-                                            </div>
+                                            <div className={`text-sm p-2 rounded mb-4 ${updateStatus === 'success' ? 'bg-success/20 text-success' : 'bg-danger/20 text-danger'}`}>{updateMessage}</div>
                                         )}
-                                        
+
                                         <div className="flex justify-end gap-2 mt-6">
-                                            <button 
-                                                type="button" 
-                                                className="btn btn-outline-danger"
-                                                onClick={closeModal}
-                                                disabled={loading}
-                                            >
+                                            <button type="button" className="btn btn-outline-danger" onClick={closeModal} disabled={loading}>
                                                 Cancel
                                             </button>
-                                            <button 
-                                                type="submit" 
-                                                className="btn btn-primary"
-                                                disabled={loading}
-                                            >
+                                            <button type="submit" className="btn btn-primary" disabled={loading}>
                                                 {loading ? (
                                                     <span className="flex items-center gap-2">
                                                         <span className="animate-spin border-2 border-white !border-l-transparent rounded-full w-4 h-4 inline-flex"></span>
                                                         Saving...
                                                     </span>
-                                                ) : 'Save Changes'}
+                                                ) : (
+                                                    'Save Changes'
+                                                )}
                                             </button>
                                         </div>
                                     </form>
                                 </div>
                             </div>
                         )}
-                        
                     </div>
                     <div>
                         <div>
@@ -442,11 +432,12 @@ const Index = () => {
                                     {marketData && (
                                         <div className="mt-4">
                                             <ReactApexChart
-                                                options={chartData.options}
-                                                series={chartData.series}
+                                                series={lineChart.series}
+                                                options={lineChart.options}
+                                                className="rounded-lg bg-white dark:bg-black overflow-hidden"
                                                 type="line"
-                                                height={350}
-                                            />
+                                                height={300}
+                                            />{' '}
                                         </div>
                                     )}
                                 </div>
@@ -454,51 +445,9 @@ const Index = () => {
                         </div>
                     </div>
                 </div>
-                    <div className="panel h-full">
-                        <div className="flex items-start justify-between dark:text-white-light mb-5 -mx-5 p-5 pt-0 border-b border-white-light dark:border-[#1b2e4b]">
-                            <h5 className="font-semibold text-lg">Activity Log</h5>
-                            <div className="dropdown">
-                               
-                            </div>
-                        </div>
-                        <div className="space-y-7">
-                        {loading ? (
-    <div className="flex justify-center p-4">
-        <div className="animate-spin border-2 border-primary border-l-transparent rounded-full w-full inline-flex"></div>
-    </div>
-) : logs && logs.length > 0 ? (
-    logs.map((log, index) => {
-        // Use a default type since we don't have a type property
-        const logType = 'default';
-        const logConfig = logTypeConfig[logType] || logTypeConfig.default;
-        const IconComponent = logConfig.icon;
-        const isLast = index === logs.length - 1;
-        
-        return (
-            <div className="flex" key={log._id || index}>
-                <div className="shrink-0 ltr:mr-2 rtl:ml-2 relative z-10">
-                    {!isLast && (
-                        <div className="before:w-[2px] before:h-[calc(100%-24px)] before:bg-white-dark/30 before:absolute before:top-10 before:left-4" />
-                    )}
-                    <div className={`${logConfig.bgColor} shadow w-8 h-8 rounded-full flex items-center justify-center text-white`}>
-                        <IconComponent />
-                    </div>
-                </div>
-                <div>
-                    <h5 className="font-semibold dark:text-white-light">
-                        {/* Use log.log instead of log.message */}
-                        {(log as any)?.log}
-                    </h5>
-                    <p className="text-white-dark text-xs">{formatDate(log.createdAt)}</p>
-                </div>
-            </div>
-        );
-    })
-) : (
-    <p className="text-gray-500 dark:text-gray-400">No logs available.</p>
-)}
-                        </div>
-                    </div>
+                    <SalesDashboard />
+             <Logs />
+               
             </div>
         </div>
     );

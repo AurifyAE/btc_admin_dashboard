@@ -36,6 +36,7 @@
         "highlight.js": "^11.6.0",
         "jspdf": "^3.0.1",
         "jspdf-autotable": "^5.0.2",
+        "lucide-react": "^0.513.0",
         "mantine-datatable": "^1.7.17",
         "nouislider-react": "^3.4.1",
         "pdfkit-browserify": "^0.8.3-R2",

@@ -12,7 +12,7 @@ const defaultState = {
     animation: '',
     navbar: 'navbar-sticky',
     locale: 'en',
-    sidebar: false,
+    sidebar: true,
     pageTitle: '',
     languageList: [
         { code: 'zh', name: 'Chinese' },
@@ -43,8 +43,8 @@ const initialState = {
     navbar: localStorage.getItem('navbar') || themeConfig.navbar,
     locale: localStorage.getItem('i18nextLng') || themeConfig.locale,
     isDarkMode: false,
-    sidebar: localStorage.getItem('sidebar') || defaultState.sidebar,
-    semidark: localStorage.getItem('semidark') || themeConfig.semidark,
+    sidebar: localStorage.getItem('sidebar') === 'true' ? true : false, // closed by default
+    semidark: localStorage.getItem('semidark') === 'true' ? true : false,
     languageList: [
         { code: 'zh', name: 'Chinese' },
         { code: 'da', name: 'Danish' },
@@ -95,7 +95,8 @@ const themeConfigSlice = createSlice({
         },
         toggleMenu(state, { payload }) {
             payload = payload || state.menu; // vertical, collapsible-vertical, horizontal
-            state.sidebar = false; // reset sidebar state
+            // state.sidebar = false; // reset sidebar state
+            state.sidebar = localStorage.getItem('sidebar') === 'true' ? true : false;
             localStorage.setItem('menu', payload);
             state.menu = payload;
         },
@@ -132,9 +133,17 @@ const themeConfigSlice = createSlice({
             state.locale = payload;
         },
         toggleSidebar(state) {
+            console.log(state.sidebar, 'this is toggleSidebar state in reducx before closing');
             state.sidebar = !state.sidebar;
+            console.log(state.sidebar, 'this is toggleSidebar state in reducx after closing');
+            localStorage.setItem('sidebar', state.sidebar.toString());
         },
-
+        setSidebarOpen(state) {
+            state.sidebar = true;
+        },
+        setSidebarClosed(state) {
+            state.sidebar = false;
+        },
         setPageTitle(state, { payload }) {
             if(userRole === 'admin') {
                 document.title = `${payload} | BTC Admin`;
@@ -146,6 +155,6 @@ const themeConfigSlice = createSlice({
     },
 });
 
-export const { toggleTheme, toggleMenu, toggleLayout, toggleRTL, toggleAnimation, toggleNavbar, toggleSemidark, toggleLocale, toggleSidebar, setPageTitle } = themeConfigSlice.actions;
+export const { toggleTheme,setSidebarOpen, setSidebarClosed, toggleMenu, toggleLayout, toggleRTL, toggleAnimation, toggleNavbar, toggleSemidark, toggleLocale, toggleSidebar, setPageTitle } = themeConfigSlice.actions;
 
 export default themeConfigSlice.reducer;

@@ -716,8 +716,8 @@ const Add = () => {
             }
 
             // Add salesperson if available
-            if (invoiceData.salesperson) {
-                doc.text(`Salesperson: ${invoiceData.salesperson.name || 'N/A'}`, 20, yPos);
+            if (salesperson) {
+                doc.text(`Sold by: ${salesperson.name || 'N/A'}`, 20, yPos);
                 yPos += 6;
             }
 

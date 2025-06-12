@@ -51,7 +51,6 @@ const userRole = localStorage.getItem('userRole');
                     pure_weight: parseFloat(product.pure_weight),
                     mkg_rate: parseFloat(product.mkg_rate),
                     mkg_amount: parseFloat(product.mkg_amount),
-                    net_amount: parseFloat(product.net_amount),
                     barcode: product.barcode
                 }));
                 

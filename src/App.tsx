@@ -19,9 +19,11 @@ function App({ children }: PropsWithChildren) {
         dispatch(toggleSemidark(localStorage.getItem('semidark') || themeConfig.semidark));
     }, [dispatch, themeConfig.theme, themeConfig.menu, themeConfig.layout, themeConfig.rtlClass, themeConfig.animation, themeConfig.navbar, themeConfig.locale, themeConfig.semidark]);
 
+    console.log(themeConfig.sidebar,'this is app.tsx sidebar state')
+
     return (
         <div
-            className={`${(store.getState().themeConfig.sidebar && 'toggle-sidebar') || ''} ${themeConfig.menu} ${themeConfig.layout} ${
+            className={`${themeConfig.sidebar ? 'toggle-sidebar' : ''} ${themeConfig.menu} ${themeConfig.layout} ${
                 themeConfig.rtlClass
             } main-section antialiased relative font-nunito text-sm font-normal`}
         >

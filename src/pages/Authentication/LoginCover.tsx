@@ -147,14 +147,14 @@ const UnifiedLoginCover = () => {
                 <button 
                     type="button"
                     className="btn btn-gradient w-full border-0 uppercase shadow-[0_10px_20px_-10px_rgba(67,97,238,0.44)] py-4"
-                    onClick={() => setLoginType('admin')}
+                    onClick={()=> navigate('/adminlogin')}
                 >
                     Sign in as Admin
                 </button>
                 <button 
                     type="button"
                     className="btn btn-outline-primary w-full uppercase py-4"
-                    onClick={() => setLoginType('salesperson')}
+                    onClick={() => navigate('/salespersonlogin')}
                 >
                     Sign in as Salesperson
                 </button>

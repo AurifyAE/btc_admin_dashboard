@@ -8,6 +8,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 interface Salesperson {
+    name?: string;
     selledProducts?: any[]; // Replace 'any' with a more specific type if possible
     // other properties if they exist
 }
@@ -124,162 +125,199 @@ const SoldProducts = () => {
         }).format(amount);
     };
 
-    // Generate invoice PDF for a specific product
-    const generateInvoicePDF = async (invoiceData: any) => {
-        setGeneratingPdf(true);
-        try {
-            const doc = new jsPDF();
-    
-            // Set font
-            doc.setFont('helvetica');
-    
-            // Company Header
-            doc.setFontSize(20);
-            doc.text('BTC', doc.internal.pageSize.width / 2, 20, { align: 'center' });
-            doc.setFontSize(10);
-            doc.text('123 Business Street, City, Country', doc.internal.pageSize.width / 2, 27, { align: 'center' });
-            doc.text('Phone: (123) 456-7890 | Email: info@company.com', doc.internal.pageSize.width / 2, 32, { align: 'center' });
-    
-            // Invoice Details
-            doc.setFontSize(16);
-            doc.text('Invoice', 20, 45);
-            doc.setLineWidth(0.5);
-            doc.line(20, 47, 50, 47);
-    
-            doc.setFontSize(10);
-            doc.text(`Invoice Number: ${invoiceData.invoiceNumber}`, 20, 55);
-    
-            const date = new Date(invoiceData.invoiceDate);
-            const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
-            doc.text(`Date: ${formattedDate}`, 20, 60);
-    
-            // Customer Details
-            doc.setFontSize(12);
-            doc.text('Customer Details', 20, 70);
-            doc.setFontSize(10);
-            const customerDetails = [
-                `Name: ${invoiceData.userName || 'N/A'}`,
-                `Email: ${invoiceData.userEmail || 'N/A'}`,
-                `Phone: ${invoiceData.userPhone || 'N/A'}`,
-                `Address: ${invoiceData.userLocation || 'N/A'}`,
-            ];
-            let customerY = 77;
-            customerDetails.forEach(detail => {
-                doc.text(detail, 20, customerY);
-                customerY += 5;
-            });
-    
-            // // Salesperson Details
-            // doc.setFontSize(12);
-            // doc.text('Salesperson Details', 120, 70);
-            // doc.setFontSize(10);
-    
-            // const salespersonData = invoiceData.salesperson || {};
-            // doc.text(`Name: ${salespersonData.name || 'N/A'}`, 120, 77);
-            // doc.text(`Email: ${salespersonData.email || 'N/A'}`, 120, 82);
-    
-            // Table Data
-            const items = [{
-                description: invoiceData.description,
-                stock_code: invoiceData.stock_code,
-                price: Number(invoiceData.price || invoiceData.total) || 0,
-                quantity: Number(invoiceData.quantity || 1),
-                total: Number(invoiceData.total) || 0
-            }];
-    
-            // Items Table
-            autoTable(doc, {
-                startY: 95,
-                head: [['Item', 'Stock Code', 'Price', 'Quantity', 'Total']],
-                body: items.map(item => [
-                    item.description || 'Unnamed Item',
-                    item.stock_code || 'N/A',
-                    item.price.toFixed(2),
-                    item.quantity,
-                    item.total.toFixed(2)
-                ]),
-                theme: 'plain',
-                headStyles: {
-                    fillColor: [240, 240, 240],
-                    textColor: [0, 0, 0],
-                    fontStyle: 'bold',
-                    fontSize: 7
-                },
-                styles: { fontSize: 7 },
-                columnStyles: {
-                    0: { cellWidth: 60 },  // Item
-                    1: { cellWidth: 30, halign: 'center' }, // Stock Code
-                    2: { cellWidth: 25, halign: 'right' }, // Price
-                    3: { cellWidth: 25, halign: 'center' }, // Quantity
-                    4: { cellWidth: 30, halign: 'right' }  // Total
-                },
-                margin: { left: 5, right: 5 }
-            });
-    
-            const finalY = (doc as any).lastAutoTable.finalY + 10;
-    
-            // Totals
-            let yPos = finalY;
-            const totalsX = 130;
-            const valuesX = 190;
-    
-            const totalValue = Number(invoiceData.total) || 0;
-            const tax = Number(invoiceData.tax || 0);
-            const discount = Number(invoiceData.discount || 0);
-            const taxAmount = (totalValue * tax) / 100;
-            const discountAmount = (totalValue * discount) / 100;
-            const finalTotal = totalValue + taxAmount - discountAmount;
-    
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-    
-            // Subtotal
-            doc.text('Subtotal:', totalsX, yPos, { align: 'right' });
-            doc.text(`$${totalValue.toFixed(2)}`, valuesX, yPos, { align: 'right' });
-            yPos += 6;
-    
-            // Tax
-            doc.text(`Tax (${tax}%):`, totalsX, yPos, { align: 'right' });
-            doc.text(`$${taxAmount.toFixed(2)}`, valuesX, yPos, { align: 'right' });
-            yPos += 6;
-    
-            // Discount
-            doc.text(`Discount (${discount}%):`, totalsX, yPos, { align: 'right' });
-            doc.text(`-$${discountAmount.toFixed(2)}`, valuesX, yPos, { align: 'right' });
-            yPos += 6;
-    
-            // Line
-            doc.setLineWidth(0.5);
-            doc.line(totalsX - 20, yPos, valuesX + 10, yPos);
-            yPos += 5;
-    
-            // Final Total
-            doc.setFontSize(12);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Total:', totalsX, yPos, { align: 'right' });
-            doc.text(`$${finalTotal.toFixed(2)}`, valuesX, yPos, { align: 'right' });
-    
-            // Additional Info
-            yPos += 15;
-            doc.setFont('helvetica', 'normal');
-            doc.setFontSize(10);
-    
-            if (invoiceData.goldRate) {
-                doc.text(`Gold Rate: $${invoiceData.goldRate.toFixed(2)}/oz`, 20, yPos);
-                yPos += 6;
+   // Generate invoice PDF for a specific product
+const generateInvoicePDF = async (invoiceData: any) => {
+    setGeneratingPdf(true);
+    try {
+        const doc = new jsPDF();
+
+        // Set font
+        doc.setFont('helvetica');
+
+        // Company Header
+        doc.setFontSize(20);
+        doc.text('BTC', doc.internal.pageSize.width / 2, 20, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text('123 Business Street, City, Country', doc.internal.pageSize.width / 2, 27, { align: 'center' });
+        doc.text('Phone: (123) 456-7890 | Email: info@company.com', doc.internal.pageSize.width / 2, 32, { align: 'center' });
+
+        // Invoice Details
+        doc.setFontSize(16);
+        doc.text('Invoice', 20, 45);
+        doc.setLineWidth(0.5);
+        doc.line(20, 47, 50, 47);
+
+        doc.setFontSize(10);
+        doc.text(`Invoice Number: ${invoiceData.invoiceNumber}`, 20, 55);
+
+        const date = new Date(invoiceData.invoiceDate);
+        const formattedDate = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+        doc.text(`Date: ${formattedDate}`, 20, 60);
+
+        // Customer Details with proper validation (matching first example style)
+        doc.setFontSize(12);
+        doc.text('Customer Details', 20, 70);
+        doc.setFontSize(10);
+
+        const customerDetails = [];
+        if (invoiceData.user) {
+            customerDetails.push(`Name: ${invoiceData.user.name || invoiceData.userName || 'N/A'}`);
+            customerDetails.push(`Email: ${invoiceData.user.email || invoiceData.userEmail || 'N/A'}`);
+            customerDetails.push(`Phone: ${invoiceData.user.phone || invoiceData.userPhone || 'N/A'}`);
+            if (invoiceData.user.location || invoiceData.userLocation) {
+                customerDetails.push(`Address: ${invoiceData.user.location || invoiceData.userLocation}`);
             }
-    
-            // Save
-            doc.save(`Invoice_${invoiceData.invoiceNumber}.pdf`);
-    
-            return true;
-        } catch (error) {
-            console.error('Error generating PDF:', error);
-            return false;
-        } finally {
-            setGeneratingPdf(false);
+        } else {
+            customerDetails.push(`Name: ${invoiceData.userName || 'N/A'}`);
+            customerDetails.push(`Email: ${invoiceData.userEmail || 'N/A'}`);
+            customerDetails.push(`Phone: ${invoiceData.userPhone || 'N/A'}`);
+            customerDetails.push(`Address: ${invoiceData.userLocation || 'N/A'}`);
         }
-    };
+
+        let customerY = 77;
+        customerDetails.forEach((detail) => {
+            doc.text(detail, 20, customerY);
+            customerY += 5;
+        });
+
+        // Table Data: Use all items with proper validation
+        const items = Array.isArray(invoiceData.items) ? invoiceData.items : [];
+        const itemsTableData: any[] = [];
+
+        items.forEach((item: any) => {
+            // Ensure values are properly defined and converted to numbers
+            const itemName = item.description || 'Unnamed Item';
+            const grossWeight = Number(item.gross_weight) || 0;
+            const stoneWeight = Number(item.stone_weight) || 0;
+            const netWeight = Number(item.net_weight) || 0;
+            const pureWeight = Number(item.pure_weight) || 0;
+            const pureGoldRate = (invoiceData.goldRate / 31.103) * pureWeight;
+            const mkgRate = Number(item.mkg_rate) || 0;
+            const mkgAmount = Number(item.mkg_amount) || 0;
+
+            itemsTableData.push([
+                itemName,
+                Number(grossWeight).toFixed(2),
+                Number(stoneWeight).toFixed(2),
+                Number(netWeight).toFixed(2),
+                Number(pureWeight).toFixed(2),
+                Number(pureGoldRate).toFixed(2),
+                Number(mkgRate).toFixed(2),
+                Number(mkgAmount).toFixed(2),
+                (Number(pureGoldRate) + Number(mkgRate) + Number(mkgAmount)).toFixed(2), // Net Amount
+            ]);
+        });
+
+        // Items Table with comprehensive column structure
+        autoTable(doc, {
+            startY: 100,
+            head: [['Item', 'Gross', 'Stone', 'Net', 'Pure', 'Pure gold Rate', 'MKG Rate', 'MKG Amt', 'Net Amt']],
+            body: itemsTableData,
+            theme: 'plain',
+            headStyles: {
+                fillColor: [240, 240, 240],
+                textColor: [0, 0, 0],
+                fontStyle: 'bold',
+                fontSize: 7,
+            },
+            styles: { fontSize: 7 }, // Reduced font size to fit all columns
+            columnStyles: {
+                0: { cellWidth: 45 }, // Item - reduced width
+                1: { cellWidth: 20, halign: 'center' }, // Gross Weight
+                2: { cellWidth: 20, halign: 'center' }, // Stone Weight
+                3: { cellWidth: 20, halign: 'center' }, // Net Weight
+                4: { cellWidth: 20, halign: 'center' }, // Pure Weight
+                5: { cellWidth: 20, halign: 'center' }, // Pure Gold Rate
+                6: { cellWidth: 20, halign: 'center' }, // MKG Rate
+                7: { cellWidth: 20, halign: 'center' }, // MKG Amount
+                8: { cellWidth: 20, halign: 'right' }, // Net Amount
+            },
+            margin: { left: 5, right: 5 }, // Reduced margins to fit all columns
+        });
+
+        const finalY = (doc as any).lastAutoTable.finalY + 10;
+
+        // Totals with proper validation
+        let yPos = finalY;
+        const totalsX = 130;
+        const valuesX = 190;
+
+        // Ensure all values are numbers before using toFixed
+        const subtotalValue = Number(invoiceData.totals?.subtotal || invoiceData.subtotal || invoiceData.total) || 0;
+        const taxValue = Number(invoiceData.totals?.taxAmount || 0);
+        const discountValue = Number(invoiceData.totals?.discountAmount || 0);
+        const totalValue = Number(invoiceData.totals?.total || invoiceData.total) || 0;
+
+        // If tax/discount amounts aren't pre-calculated, calculate them
+        const tax = Number(invoiceData.tax || 0);
+        const discount = Number(invoiceData.discount || 0);
+        const calculatedTaxAmount = taxValue || (subtotalValue * tax) / 100;
+        const calculatedDiscountAmount = discountValue || (subtotalValue * discount) / 100;
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+
+        // Subtotal
+        doc.text('Subtotal:', totalsX, yPos, { align: 'right' });
+        doc.text(`$${subtotalValue.toFixed(2)}`, valuesX, yPos, { align: 'right' });
+        yPos += 6;
+
+        // Tax - Always show tax (even if 0)
+        doc.text(`Tax (${tax}%):`, totalsX, yPos, { align: 'right' });
+        doc.text(`$${calculatedTaxAmount.toFixed(2)}`, valuesX, yPos, { align: 'right' });
+        yPos += 6;
+
+        // Discount - Always show discount (even if 0)
+        doc.text(`Discount (${discount}%):`, totalsX, yPos, { align: 'right' });
+        doc.text(`-$${calculatedDiscountAmount.toFixed(2)}`, valuesX, yPos, { align: 'right' });
+        yPos += 6;
+
+        // Shipping rate if applicable
+        if (invoiceData.shippingRate && invoiceData.shippingRate > 0) {
+            doc.text('Shipping:', totalsX, yPos, { align: 'right' });
+            doc.text(`$${Number(invoiceData.shippingRate).toFixed(2)}`, valuesX, yPos, { align: 'right' });
+            yPos += 6;
+        }
+
+        // Draw a line before final total
+        doc.setLineWidth(0.5);
+        doc.line(totalsX - 20, yPos, valuesX + 10, yPos);
+        yPos += 5;
+
+        // Final Total
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Total:', totalsX, yPos, { align: 'right' });
+        doc.text(`$${totalValue.toFixed(2)}`, valuesX, yPos, { align: 'right' });
+        doc.setFont('helvetica', 'normal');
+
+        // Additional information
+        yPos += 15;
+        doc.setFontSize(10);
+
+        // Add gold rate if applicable
+        if (invoiceData.goldRate) {
+            doc.text(`Gold Rate: $${Number(invoiceData.goldRate).toFixed(2)}/oz`, 20, yPos);
+            yPos += 6;
+        }
+
+        // Add salesperson if available
+        if (salesperson) {
+            doc.text(`Sold by: ${salesperson.name || 'N/A'}`, 20, yPos);
+            yPos += 6;
+        }
+
+        // Save the PDF
+        doc.save(`Invoice_${invoiceData.invoiceNumber}.pdf`);
+
+        return true;
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        return false;
+    } finally {
+        setGeneratingPdf(false);
+    }
+};
     
 
     // Handle download invoice
@@ -308,8 +346,8 @@ const SoldProducts = () => {
                             records={recordsData}
                             columns={[
                                 { accessor: 'invoiceNumber', title: 'Invoice #' },
-                                { accessor: 'stock_code', title: 'Stock Code' },
-                                { accessor: 'description', title: 'Description' },
+                                // { accessor: 'stock_code', title: 'Stock Code' },
+                                // { accessor: 'description', title: 'Description' },
                                 { 
                                     accessor: 'invoiceDate', 
                                     title: 'Date',
