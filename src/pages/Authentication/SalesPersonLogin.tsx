@@ -150,13 +150,6 @@ const SalespersonLogin = () => {
                                     >
                                         Sign in
                                     </button>
-                                    {/* <button
-                                        type="button"
-                                        className="btn btn-outline-secondary mt-4 w-full uppercase"
-                                        onClick={() => navigate('/login')}
-                                    >
-                                        Back to Login Options
-                                    </button> */}
                                 </div>
                             </form>
                         </div>
