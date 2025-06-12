@@ -115,7 +115,7 @@ const ProductInHand = lazy(() => import('../pages/ProductInHand/ProductInHand'))
 const SellProduct = lazy(() => import('../pages/SellProducts/SellProducts'));
 const ReturnCart = lazy(() => import('../pages/ReturnCart/ReturnCart'));
 const SoldPageOfSalesPerson = lazy(() => import('../pages/SoldPageOfSalesPerson/SoldPageOfSalesPerson'))
-const SalespersonLogin = lazy(() => import('../pages/Authentication/SalespersonLogin'));
+const SalesPersonLogin = lazy(() => import('../pages/Authentication/SalesPersonLogin'));
 
 
 const routes = [
@@ -164,7 +164,7 @@ const routes = [
     },
      {
         path: '/salespersonlogin',
-        element: <SalespersonLogin />,
+        element: <SalesPersonLogin />,
         layout: 'blank',
     },
     {
