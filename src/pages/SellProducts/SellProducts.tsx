@@ -20,6 +20,14 @@ const Add = () => {
     const userRole = localStorage.getItem('userRole');
     const [users, setUsers] = useState<any>([]);
     const [name, setName] = useState<any>(null);
+    const [accountType, setAccountType] = useState<any>(null);
+    const [accountMode, setAccountMode] = useState<any>(null);
+    const [accountHead, setAccountHead] = useState<any>(null);
+    const [acCode, setAcCode] = useState<any>(null);
+    const [currencyCode, setCurrencyCode] = useState<any>(null);
+    const [poBox, setPoBox] = useState<any>(null);
+    const [city, setCity] = useState<any>(null);
+    const [countryCode, setCountryCode] = useState<any>(null);
     const [email, setEmail] = useState<any>(null);
     const [address, setAddress] = useState<any>(null);
     const [salesperson, setSalesPerson] = useState<any>(null);
@@ -103,28 +111,42 @@ const Add = () => {
     };
 
     useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                const response = await axios.get(`${backendUrl}/salesperson/get-users`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+    const fetchUsers = async () => {
+        try {
+            const response = await axios.get(`${backendUrl}/from-sql/get-accounts`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
 
-                console.log('Users:', response.data);
-                // Transform users data for react-select
-                const transformedUsers = response.data.map((user: any) => ({
-                    value: user.id,
-                    label: `${user.name} - ${user.email}`, // Display name and email for better identification
-                    ...user, // Include all user details
-                }));
+            console.log('Full response:', response.data);
+            console.log('Accounts array:', response.data.accounts);
+            console.log('First account:', response.data.accounts[0]);
+            console.log('Accounts length:', response.data.accounts.length);
 
-                setUsers(transformedUsers);
-            } catch (error) {
-                console.error('Error fetching users:', error);
+            // Ensure accounts is an array before mapping
+            const accounts = Array.isArray(response.data.accounts) ? response.data.accounts : [];
+            if (accounts.length === 0) {
+                console.warn('No accounts found in response');
+                setUsers([]);
+                return;
             }
-        };
 
-        fetchUsers();
-    }, [token]);
+            // Transform users data for react-select
+            const transformedUsers = accounts.map((user: any) => ({
+                value: user.id,
+                label: `${user.ACCODE} `, // Adjust based on actual field names
+                ...user, // Include all user details
+            }));
+
+            setUsers(transformedUsers);
+            console.log("Transformed Users:", transformedUsers);
+        } catch (error) {
+            console.error('Error fetching users:', error);
+            setUsers([]);
+        }
+    };
+
+    fetchUsers();
+}, [token]);
 
     const fetchProductsForUser = async (userId: string) => {
         if (!userId) {
@@ -184,8 +206,16 @@ const Add = () => {
     const handleUserChange = (selected: any) => {
         setSelectedUser(selected); // Update selected user
         setName(selected.name);
+        setAccountType(selected.ACCOUNT_TYPE);
+        setAccountMode(selected.ACCOUNT_MODE);
+        setAccountHead(selected.ACCOUNT_HEAD);
+        setAcCode(selected.ACCODE);
+        setCurrencyCode(selected.CURRENCY_CODE);
+        setPoBox(selected.PO_BOX);
+        setCity(selected.CITY);
+        setCountryCode(selected.COUNTRY_CODE);
         setEmail(selected.email);
-        setAddress(selected.location);
+        setAddress(selected.ADDRESS);
         setPhone(selected.phone);
     };
 
@@ -781,32 +811,75 @@ const Add = () => {
 
                             <div className="mt-4 flex items-center">
                                 <label htmlFor="reciever-name" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                    Name
+                                    Account Type
                                 </label>
                                 <input
-                                    id="reciever-name"
+                                    id="acct-type"
                                     type="text"
-                                    name="reciever-name"
-                                    value={name || ''}
-                                    onChange={(e) => setName(e.target.value)}
+                                    name="acct-type"
+                                    value={accountType || ''}
+                                    onChange={(e) => setAccountType(e.target.value)}
                                     className="form-input flex-1"
-                                    placeholder="Enter Name"
+                                    placeholder="Enter Account Type"
+                                />
+                            </div>
+                            <div className="mt-4 flex items-center">
+                                <label htmlFor="reciever-name" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
+                                    Account Mode
+                                </label>
+                                <input
+                                    id="acct-mode"
+                                    type="text"
+                                    name="acct-mode"
+                                    value={accountMode || ''}
+                                    onChange={(e) => setAccountMode(e.target.value)}
+                                    className="form-input flex-1"
+                                    placeholder="Enter Account Mode"
                                 />
                             </div>
                             <div className="mt-4 flex items-center">
                                 <label htmlFor="reciever-email" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                    Email
+                                    Account Head
                                 </label>
                                 <input
-                                    value={email || ''}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    id="reciever-email"
-                                    type="email"
-                                    name="reciever-email"
+                                    value={accountHead || ''}
+                                    onChange={(e) => setAccountHead(e.target.value)}
+                                    id="acct-head"
+                                    type="text"
+                                    name="acct-head"
                                     className="form-input flex-1"
-                                    placeholder="Enter Email"
+                                    placeholder="Enter Account Head"
                                 />
                             </div>
+                            <div className="mt-4 flex items-center">
+                                <label htmlFor="reciever-email" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
+                                    Account Code
+                                </label>
+                                <input
+                                    value={acCode || ''}
+                                    onChange={(e) => setAcCode(e.target.value)}
+                                    id="acct-code"
+                                    type="text"
+                                    name="acct-code"
+                                    className="form-input flex-1"
+                                    placeholder="Enter Account Code"
+                                />
+                            </div>
+                            <div className="mt-4 flex items-center">
+                                <label htmlFor="reciever-email" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
+                                    Currency Code
+                                </label>
+                                <input
+                                    value={currencyCode || ''}
+                                    onChange={(e) => setCurrencyCode(e.target.value)}
+                                    id="currency-code"
+                                    type="text"
+                                    name="currency-code"
+                                    className="form-input flex-1"
+                                    placeholder="Enter Currency Code"
+                                />
+                            </div>
+                              
                             <div className="mt-4 flex items-center">
                                 <label htmlFor="reciever-address" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
                                     Address
@@ -814,25 +887,67 @@ const Add = () => {
                                 <input
                                     value={address || ''}
                                     onChange={(e) => setAddress(e.target.value)}
-                                    id="reciever-address"
+                                    id="address"
                                     type="text"
-                                    name="reciever-address"
+                                    name="address"
                                     className="form-input flex-1"
                                     placeholder="Enter Address"
                                 />
                             </div>
-                            <div className="mt-4 flex items-center">
-                                <label htmlFor="reciever-number" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
-                                    Phone Number
-                                </label>
-                                <input
-                                    value={phone || ''}
-                                    onChange={(e) => setPhone(e.target.value)}
-                                    id="reciever-number"
+                              <div className="mt-4 flex items-center">
+                                    <label htmlFor="reciever-email" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
+                                        Currency Code
+                                    </label>
+                                    <input
+                                        value={currencyCode || ''}
+                                        onChange={(e) => setCurrencyCode(e.target.value)}
+                                        id="currency-code"
+                                        type="text"
+                                        name="currency-code"
+                                        className="form-input flex-1"
+                                        placeholder="Enter Currency Code"
+                                    />
+                                </div>
+                                <div className="mt-4 flex items-center">
+                                    <label htmlFor="poBox" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
+                                        Post Box
+                                    </label>
+                                    <input
+                                        value={poBox || ''}
+                                    onChange={(e) => setPoBox(e.target.value)}
+                                    id="poBox"
                                     type="text"
-                                    name="reciever-number"
+                                    name="poBox"
                                     className="form-input flex-1"
-                                    placeholder="Enter Phone number"
+                                    placeholder="Enter Post Box"
+                                />
+                            </div>
+                                <div className="mt-4 flex items-center">
+                                    <label htmlFor="city" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
+                                        City
+                                    </label>
+                                    <input
+                                        value={city || ''}
+                                    onChange={(e) => setCity(e.target.value)}
+                                    id="city"
+                                    type="text"
+                                    name="city"
+                                    className="form-input flex-1"
+                                    placeholder="Enter City"
+                                />
+                            </div>
+                                <div className="mt-4 flex items-center">
+                                    <label htmlFor="countryCode" className="ltr:mr-2 rtl:ml-2 w-1/3 mb-0">
+                                        Country Code
+                                    </label>
+                                    <input
+                                        value={countryCode || ''}
+                                    onChange={(e) => setCountryCode(e.target.value)}
+                                    id="countryCode"
+                                    type="text"
+                                    name="countryCode"
+                                    className="form-input flex-1"
+                                    placeholder="Enter Country Code"
                                 />
                             </div>
                         </div>

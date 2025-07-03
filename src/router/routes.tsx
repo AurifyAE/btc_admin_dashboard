@@ -124,10 +124,10 @@ const routes = [
         path: '/',
         element: <Index />,
     },
-    {
-        path: '/products',
-        element: <Products />,
-    },
+    // {
+    //     path: '/products',
+    //     element: <Products />,
+    // },
     {
         path: '/locations',
         element: <Locations />,

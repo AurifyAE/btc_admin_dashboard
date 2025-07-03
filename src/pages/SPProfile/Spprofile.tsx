@@ -353,7 +353,9 @@ const Profile = () => {
                         {products.map((item, index) => (
                             <tr key={index}>
                                 <td className="px-4 py-2">{item.invoiceNumber || 'N/A'}</td>
-                                <td className="px-4 py-2">{item.invoiceDate ? (typeof item.invoiceDate === 'string' ? new Date(item.invoiceDate).toLocaleString("en-GB") : item.invoiceDate.toLocaleString("en-GB")) : 'N/A'}</td>
+                                <td className="px-4 py-2">
+                                    {item.invoiceDate ? (typeof item.invoiceDate === 'string' ? new Date(item.invoiceDate).toLocaleString('en-GB') : item.invoiceDate.toLocaleString('en-GB')) : 'N/A'}
+                                </td>
                                 <td className="px-4 py-2">{typeof item.total === 'number' ? item.total.toFixed(2) : item.total ? Number(item.total).toFixed(2) : 'N/A'} USD</td>
                                 <td className="px-4 py-2">{item.userName || 'N/A'}</td>
                                 <td className="px-4 py-2">
@@ -385,7 +387,13 @@ const Profile = () => {
                         </div>
                         <div className="mb-5">
                             <div className="flex flex-col justify-center items-center">
-                                <img src={salesperson?.image?.url || '/assets/images/profile-default.png'} alt="Profile" className="w-24 h-24 rounded-full object-cover mb-5" />
+                                {salesperson?.image?.url ? (
+                                    <img src={salesperson.image.url} alt="Profile" className="w-24 h-24 rounded-full object-cover mb-5" />
+                                ) : (
+                                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-5">
+                                        <span className="text-white text-2xl font-bold">{salesperson?.name?.charAt(0) || 'U'}</span>
+                                    </div>
+                                )}{' '}
                                 <p className="font-semibold text-primary text-xl">{salesperson?.name || 'Loading...'}</p>
                             </div>
                             <ul className="mt-5 flex flex-col max-w-[200px] m-auto space-y-4 font-semibold text-white-dark">
@@ -572,13 +580,8 @@ const Profile = () => {
                     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
                         {/* Modal Header */}
                         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                                Invoice Details - {selectedInvoice.invoiceNumber}
-                            </h3>
-                            <button
-                                onClick={closeModal}
-                                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                            >
+                            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Invoice Details - {selectedInvoice.invoiceNumber}</h3>
+                            <button onClick={closeModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
@@ -590,18 +593,32 @@ const Profile = () => {
                                 <div className="space-y-3">
                                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Invoice Information</h4>
                                     <div className="space-y-2">
-                                        <p><span className="font-medium">Invoice Number:</span> {selectedInvoice.invoiceNumber || 'N/A'}</p>
-                                        <p><span className="font-medium">Date:</span> {selectedInvoice.invoiceDate ? new Date(selectedInvoice.invoiceDate).toLocaleString("en-GB") : 'N/A'}</p>
-                                        <p><span className="font-medium">Gold Rate:</span> ${selectedInvoice.goldRate || 'N/A'}</p>
+                                        <p>
+                                            <span className="font-medium">Invoice Number:</span> {selectedInvoice.invoiceNumber || 'N/A'}
+                                        </p>
+                                        <p>
+                                            <span className="font-medium">Date:</span> {selectedInvoice.invoiceDate ? new Date(selectedInvoice.invoiceDate).toLocaleString('en-GB') : 'N/A'}
+                                        </p>
+                                        <p>
+                                            <span className="font-medium">Gold Rate:</span> ${selectedInvoice.goldRate || 'N/A'}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="space-y-3">
                                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Customer Information</h4>
                                     <div className="space-y-2">
-                                        <p><span className="font-medium">Name:</span> {selectedInvoice.userName || 'N/A'}</p>
-                                        <p><span className="font-medium">Email:</span> {selectedInvoice.userEmail || 'N/A'}</p>
-                                        <p><span className="font-medium">Phone:</span> {selectedInvoice.userPhone || 'N/A'}</p>
-                                        <p><span className="font-medium">Location:</span> {selectedInvoice.userLocation || 'N/A'}</p>
+                                        <p>
+                                            <span className="font-medium">Name:</span> {selectedInvoice.userName || 'N/A'}
+                                        </p>
+                                        <p>
+                                            <span className="font-medium">Email:</span> {selectedInvoice.userEmail || 'N/A'}
+                                        </p>
+                                        <p>
+                                            <span className="font-medium">Phone:</span> {selectedInvoice.userPhone || 'N/A'}
+                                        </p>
+                                        <p>
+                                            <span className="font-medium">Location:</span> {selectedInvoice.userLocation || 'N/A'}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -684,10 +701,7 @@ const Profile = () => {
                             >
                                 {generatingPdf ? 'Generating...' : 'Download PDF'}
                             </button>
-                            <button
-                                onClick={closeModal}
-                                className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors duration-200"
-                            >
+                            <button onClick={closeModal} className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md transition-colors duration-200">
                                 Close
                             </button>
                         </div>
